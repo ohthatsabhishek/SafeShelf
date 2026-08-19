@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor and OS temporary files
+.vscode/
+*.swp
+*.swo
+~$*
+
+# Local secrets and build output
+.env
+.env.*
+dist/
+build/
