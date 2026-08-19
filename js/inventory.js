@@ -559,6 +559,16 @@
 
 
   const InventoryModule = {
+    escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[character]));
+    },
+
     // Renders the list table based on filters, search, and sorting
     renderProductTable(productsList) {
       const tbody = document.getElementById('productTableBody');
@@ -568,14 +578,20 @@
       tbody.innerHTML = '';
 
       // Get values from filters
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-      const categoryFilter = document.getElementById('categoryFilter').value;
-      const statusFilter = document.getElementById('statusFilter').value;
+      const searchInput = document.getElementById('searchInput');
+      const categoryInput = document.getElementById('categoryFilter');
+      const statusInput = document.getElementById('statusFilter');
+      const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const categoryFilter = categoryInput ? categoryInput.value : 'All Categories';
+      const statusFilter = statusInput ? statusInput.value : 'All Statuses';
 
       // Filter products
       let filtered = productsList.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
-                              (item.description && item.description.toLowerCase().includes(searchQuery));
+        const searchableText = [item.name, item.brand, item.category, item.quantity, item.description]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        const matchesSearch = searchableText.includes(searchQuery);
         const matchesCategory = !categoryFilter || categoryFilter === 'All Categories' || item.category === categoryFilter;
         
         const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
@@ -587,14 +603,18 @@
       // Apply Sort
       filtered = DashboardModule.sortProducts(filtered, sortField, sortDirection);
 
+      const emptyState = document.getElementById('inventoryEmptyState');
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No products found matching filters.</td></tr>`;
+        const hasProducts = productsList.length > 0;
+        tbody.innerHTML = `<tr><td colspan="6" class="inventory-table-empty">${hasProducts ? 'No products found matching your filters.' : 'Your inventory is empty.'}</td></tr>`;
+        if (emptyState) emptyState.style.display = hasProducts ? 'none' : 'block';
       } else {
+        if (emptyState) emptyState.style.display = 'none';
         filtered.forEach(item => {
           const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
           const daysLeft = DashboardModule.getDaysRemaining(item.expiryDate);
           
-          let expiryDisplay = item.expiryDate;
+          let expiryDisplay = this.escapeHTML(item.expiryDate);
           if (daysLeft < 0) {
             expiryDisplay += ` (Expired)`;
           } else if (daysLeft === 0) {
@@ -609,13 +629,13 @@
               <div class="product-cell">
                 <div class="product-img-placeholder">📦</div>
                 <div>
-                  <span class="product-name">${item.name}</span>
-                  <span class="product-meta">${item.description || 'No description'}</span>
+                  <span class="product-name">${this.escapeHTML(item.name)}</span>
+                  <span class="product-meta">${this.escapeHTML(item.description || 'No description')}</span>
                 </div>
               </div>
             </td>
-            <td>${item.category}</td>
-            <td>${item.quantity}</td>
+            <td>${this.escapeHTML(item.category)}</td>
+            <td>${this.escapeHTML(item.quantity)}</td>
             <td>${expiryDisplay}</td>
             <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
             <td>
@@ -645,12 +665,12 @@
               <td>
                 <div class="product-cell">
                   <div class="product-img-placeholder">📦</div>
-                  <span class="product-name">${item.name}</span>
+                  <span class="product-name">${this.escapeHTML(item.name)}</span>
                 </div>
               </td>
-              <td>${item.category}</td>
-              <td>${item.quantity}</td>
-              <td>${item.expiryDate}</td>
+              <td>${this.escapeHTML(item.category)}</td>
+              <td>${this.escapeHTML(item.quantity)}</td>
+              <td>${this.escapeHTML(item.expiryDate)}</td>
               <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
               <td>
                 <button class="btn btn-outline btn-sm action-view" data-id="${item.id}">View</button>
@@ -817,11 +837,16 @@
       quantity: document.getElementById('productQuantity').value.trim(),
       expiryDate: document.getElementById('productExpiry').value,
       warrantyDate: document.getElementById('productWarranty').value,
-      description: document.getElementById('productDesc').value
+      description: document.getElementById('productDesc').value.trim()
     };
 
     // Trigger validation
     if (!StorageModule.validateProductForm(formData)) {
+      return;
+    }
+
+    if (formData.warrantyDate && formData.expiryDate && formData.warrantyDate < formData.expiryDate) {
+      StorageModule.setError('productWarranty', 'Warranty end cannot be before the expiry date.');
       return;
     }
 
