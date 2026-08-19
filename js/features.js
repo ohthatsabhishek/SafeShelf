@@ -18,6 +18,16 @@
   const WebApiModule = {
     selectedCategory: 'All',
 
+    escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[character]));
+    },
+
     // Safe Category Mapper: Maps API categories to SafeShelf categories
     // Rule: Generic API products are NEVER mapped to 'Medicine' for consumer safety.
     mapApiCategory(apiCategory) {
@@ -76,6 +86,7 @@
       const resultsContainer = document.getElementById('apiResultsList');
       const loader = document.getElementById('apiLoader');
       const manualPrompt = document.getElementById('apiManualPrompt');
+      const status = document.getElementById('apiStatus');
       
       if (!resultsContainer) return;
 
@@ -86,9 +97,11 @@
 
       if (loader) loader.style.display = 'block';
       if (manualPrompt) manualPrompt.style.display = 'none';
+      if (status) status.textContent = 'Searching the public product database...';
       resultsContainer.innerHTML = '';
 
       let results = [];
+      let usedFallback = false;
 
       try {
         const searchUrl = query && query.trim() !== '' 
@@ -130,19 +143,26 @@
         }
       } catch (err) {
         console.warn('DummyJSON API unavailable or timed out. Using local fallback catalog.', err.message);
+        usedFallback = true;
       }
 
       // If API yielded no results or failed, activate CatalogStore search
       if (results.length === 0) {
         results = CatalogStore.searchProducts(query, category);
+        usedFallback = true;
       }
 
       if (loader) loader.style.display = 'none';
+      if (status) {
+        status.textContent = usedFallback
+          ? 'Showing SafeShelf catalog suggestions while the public API is unavailable or has no match.'
+          : `Showing ${results.length} product suggestion${results.length === 1 ? '' : 's'}.`;
+      }
 
       // Render results
       if (results.length === 0) {
         resultsContainer.innerHTML = `
-          <li style="padding: 16px; font-size: 13px; color: var(--text-muted); text-align: center;">
+          <li class="api-empty-state">
             No matching products found.
           </li>
         `;
@@ -169,17 +189,20 @@
 
         const sourceClass = item.source === 'API' ? 'source-api' : 'source-catalog';
         const sourceLabel = item.source === 'API' ? 'Public API' : 'SafeShelf Catalog';
+        const safeName = this.escapeHTML(item.name);
+        const safeCategory = this.escapeHTML(item.categoryName);
+        const safeImage = this.escapeHTML(item.image);
         const iconOrThumb = item.image 
-          ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">`
+          ? `<img src="${safeImage}" alt="${safeName}" onerror="this.style.display='none'">`
           : '📦';
 
         li.innerHTML = `
           <div class="picker-card-left">
             <div class="picker-thumb">${iconOrThumb}</div>
             <div class="picker-info">
-              <div class="picker-title">${item.name}</div>
+              <div class="picker-title">${safeName}</div>
               <div class="picker-meta">
-                <span class="badge badge-safe" style="font-size: 10px; padding: 2px 6px;">${item.categoryName}</span>
+                <span class="badge badge-safe" style="font-size: 10px; padding: 2px 6px;">${safeCategory}</span>
                 <span class="picker-source-tag ${sourceClass}">${sourceLabel}</span>
               </div>
             </div>
@@ -217,24 +240,29 @@
       const defaultQty = product.defaultQuantity || '1 unit';
       const suggestedDays = product.suggestedShelfLifeDays || 30;
       const shelfLifeText = `~${suggestedDays}d suggested`;
+      const safeName = this.escapeHTML(product.name);
+      const safeCategory = this.escapeHTML(product.categoryName);
+      const safeBrand = this.escapeHTML(brand);
+      const safeQuantity = this.escapeHTML(defaultQty);
+      const safeDescription = this.escapeHTML(product.description || 'No description available.');
 
       modalBody.innerHTML = `
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="font-size: 48px; margin-bottom: 8px;">📦</div>
-          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark);">${product.name}</h2>
+          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark);">${safeName}</h2>
           <div style="display: flex; justify-content: center; gap: 8px; align-items: center; margin-top: 8px;">
             <span class="badge" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px; ${badgeStyle}">${sourceLabel}</span>
-            <span class="badge badge-safe" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px;">${product.categoryName}</span>
+            <span class="badge badge-safe" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px;">${safeCategory}</span>
           </div>
         </div>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; width: 40%; color: var(--text-dark);">Brand / Manufacturer:</td>
-            <td style="padding: 10px 8px; color: var(--text-dark);">${brand}</td>
+            <td style="padding: 10px 8px; color: var(--text-dark);">${safeBrand}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; color: var(--text-dark);">Quantity Suggestion:</td>
-            <td style="padding: 10px 8px; color: var(--text-dark);">${defaultQty}</td>
+            <td style="padding: 10px 8px; color: var(--text-dark);">${safeQuantity}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; color: var(--text-dark);">Shelf Life / Suggestion:</td>
@@ -242,7 +270,7 @@
           </tr>
           <tr>
             <td style="font-weight: 600; padding: 10px 8px; vertical-align: top; color: var(--text-dark);">Description:</td>
-            <td style="padding: 10px 8px; color: var(--text-muted); line-height: 1.4;">${product.description || 'No description available.'}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted); line-height: 1.4;">${safeDescription}</td>
           </tr>
         </table>
         <div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -525,7 +553,7 @@
       toast.style.transform = 'translateY(10px)';
       toast.style.transition = 'all 0.25s ease';
       toast.style.pointerEvents = 'auto';
-      toast.innerHTML = message;
+      toast.textContent = message;
 
       toastContainer.appendChild(toast);
       requestAnimationFrame(() => {
@@ -543,10 +571,12 @@
     // Manually adds a product or custom item to shopping list
     addItem(itemData) {
       if (!AuthModule.currentUser) return { success: false, message: 'Not logged in' };
+      const itemName = String(itemData.name || '').trim();
+      if (!itemName) return { success: false, message: 'Item name is required' };
       const list = this.getShoppingList();
       const existingIndex = list.findIndex(item => 
         (itemData.productId && item.productId === itemData.productId) || 
-        item.name.toLowerCase().trim() === itemData.name.toLowerCase().trim()
+        item.name.toLowerCase().trim() === itemName.toLowerCase()
       );
 
       let isDuplicate = false;
@@ -556,12 +586,12 @@
         list[existingIndex].reason = 'manual';
         if (itemData.quantity) list[existingIndex].quantity = itemData.quantity;
         if (itemData.category) list[existingIndex].category = itemData.category;
-        this.showToast(`ℹ️ "${itemData.name}" is already in your shopping list.`, 'info');
+        this.showToast(`ℹ️ "${itemName}" is already in your shopping list.`, 'info');
       } else {
         list.unshift({
           id: itemData.id || 'shop_' + Date.now(),
           productId: itemData.productId || null,
-          name: itemData.name.trim(),
+          name: itemName,
           category: itemData.category || 'Other',
           quantity: itemData.quantity || '1 unit',
           source: 'manual',
@@ -569,7 +599,7 @@
           purchased: false,
           addedAt: new Date().toISOString()
         });
-        this.showToast(`✓ "${itemData.name}" added to shopping list.`, 'success');
+        this.showToast(`✓ "${itemName}" added to shopping list.`, 'success');
       }
 
       this.saveShoppingList(list);
@@ -704,13 +734,13 @@
             <div class="product-cell">
               <div class="product-img-placeholder" style="font-size: 16px;">🛒</div>
               <div>
-                <span class="product-name shopping-item-name">${item.name}</span>
+                <span class="product-name shopping-item-name">${WebApiModule.escapeHTML(item.name)}</span>
                 <span class="product-meta">${item.source === 'auto' ? 'Auto-synced from inventory' : 'Added manually'}</span>
               </div>
             </div>
           </td>
-          <td><span class="badge badge-safe" style="font-size: 11px;">${item.category}</span></td>
-          <td><strong>${item.quantity || '1 unit'}</strong></td>
+          <td><span class="badge badge-safe" style="font-size: 11px;">${WebApiModule.escapeHTML(item.category)}</span></td>
+          <td><strong>${WebApiModule.escapeHTML(item.quantity || '1 unit')}</strong></td>
           <td>${reasonBadge}</td>
           <td style="text-align: right;">
             <button class="btn btn-danger btn-sm remove-shopping-item" data-id="${item.id}" title="Remove from list">Delete</button>
@@ -806,7 +836,7 @@
       // Filter tabs listeners
       document.querySelectorAll('#shoppingFilterTabs .tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          this.setFilter(e.target.dataset.filter);
+          this.setFilter(e.currentTarget.dataset.filter);
         });
       });
 

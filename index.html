@@ -565,6 +565,7 @@
               <div id="apiLoader" style="display: none; text-align: center; padding: 12px; font-size: 13px; color: var(--primary);">
                 🔄 Searching product database...
               </div>
+              <div id="apiStatus" class="api-status" role="status" aria-live="polite"></div>
 
               <!-- Results Container -->
               <ul class="api-results-list" id="apiResultsList">
@@ -686,7 +687,7 @@
           </div>
 
           <!-- Empty State Container -->
-          <div id="shoppingEmptyState" style="display: none; text-align: center; padding: 48px 16px;">
+          <div id="shoppingEmptyState" class="shopping-empty-state" style="display: none;">
             <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
             <h3 style="font-size: 18px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px;">Your shopping list is empty!</h3>
             <p style="font-size: 14px; color: var(--text-muted); max-width: 420px; margin: 0 auto 16px;">All your SafeShelf pantry and household items are well-stocked. Items will automatically appear here when running low or finished.</p>
