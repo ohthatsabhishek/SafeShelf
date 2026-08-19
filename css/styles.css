@@ -1460,6 +1460,22 @@ header {
   padding: 2px;
 }
 
+.api-status {
+  min-height: 20px;
+  margin: 4px 0 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.api-empty-state {
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
 .picker-result-card {
   display: flex;
   align-items: center;
@@ -1575,6 +1591,25 @@ header {
   flex-wrap: wrap;
 }
 
+.shopping-empty-state {
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.shopping-empty-state h3 {
+  margin-bottom: 6px;
+  color: var(--text-dark);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.shopping-empty-state p {
+  max-width: 420px;
+  margin: 0 auto 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 .shopping-item-row.purchased {
   background-color: #FAFAFA;
 }
@@ -1613,6 +1648,36 @@ header {
 .badge-purchased {
   background-color: #E2E8F0;
   color: #64748B;
+}
+
+@media (max-width: 768px) {
+  .picker-result-card {
+    align-items: flex-start;
+  }
+
+  .picker-fill-btn {
+    padding: 6px 8px;
+  }
+
+  .shopping-tabs {
+    width: 100%;
+  }
+
+  #quickAddShoppingForm {
+    max-width: none !important;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #quickShoppingInput {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  #quickShoppingCategory,
+  #quickAddShoppingForm button {
+    flex: 1;
+  }
 }
 
 /* =========================================================
