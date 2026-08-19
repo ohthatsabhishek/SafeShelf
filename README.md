@@ -109,9 +109,15 @@ logic is the app's error-handling demonstration.
 |---|---|---|
 | Registered users & passwords | `localStorage` | Must persist across visits |
 | Logged-in session pointer | `localStorage` | Keeps you logged in on refresh |
-| Inventory products (per user) | `localStorage` | Core data — must survive closing the browser |
+| Inventory products (per user) | `localStorage` | Core data — stored under a user-specific key and survives closing the browser |
 | Shopping list (per user) | `localStorage` | Same as above |
 | "This Session" stats (start time, items added, searches run) | `sessionStorage` | Deliberately temporary — resets every new tab, to demonstrate the difference between the two storage APIs |
+
+Inventory records are namespaced as `safeshelf_inventory_data_<userId>`. New
+registered users start with an empty inventory; only the demo account uses the
+built-in seed records. A compatibility read keeps records from the earlier
+shared storage format available to their original owner without exposing them
+to other accounts.
 
 ## 9. Team Members & Roles
 
