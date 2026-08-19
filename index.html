@@ -290,7 +290,7 @@
 
         <!-- STATS WIDGETS -->
         <div class="stats-grid">
-          <div class="stats-card stats-total" tabindex="0" onclick="window.navigateToView('inventory')">
+          <div class="stats-card stats-total" tabindex="0" role="button" aria-label="View all inventory items" onclick="window.navigateToView('inventory')">
             <div class="stats-icon-wrapper">📦</div>
             <div class="stats-info">
               <h3 id="metricTotal">0</h3>
@@ -300,7 +300,7 @@
             <span class="stats-card-arrow">→</span>
           </div>
 
-          <div class="stats-card stats-expiring" tabindex="0" onclick="window.navigateToView('expiring')">
+          <div class="stats-card stats-expiring" tabindex="0" role="button" aria-label="View expiring items" onclick="window.navigateToView('expiring')">
             <div class="stats-icon-wrapper">⏰</div>
             <div class="stats-info">
               <h3 id="metricExpiring">0</h3>
@@ -310,7 +310,7 @@
             <span class="stats-card-arrow" style="color: var(--warning)">→</span>
           </div>
 
-          <div class="stats-card stats-expired" tabindex="0" onclick="window.navigateToView('inventory', { status: 'Expired' })">
+          <div class="stats-card stats-expired" tabindex="0" role="button" aria-label="View expired items" onclick="window.navigateToView('inventory', { status: 'Expired' })">
             <div class="stats-icon-wrapper">⚠️</div>
             <div class="stats-info">
               <h3 id="metricExpired">0</h3>
@@ -320,7 +320,7 @@
             <span class="stats-card-arrow" style="color: var(--danger)">→</span>
           </div>
 
-          <div class="stats-card stats-categories" tabindex="0" onclick="window.navigateToView('categories')">
+          <div class="stats-card stats-categories" tabindex="0" role="button" aria-label="Browse product categories" onclick="window.navigateToView('categories')">
             <div class="stats-icon-wrapper">🗂️</div>
             <div class="stats-info">
               <h3 id="metricCategories">0</h3>
@@ -778,9 +778,9 @@
     global scope - state and functions declared in an earlier file are
     available to every file loaded after it.
   -->
-  <script src="js/auth.js"></script>       <!-- Member 1: Auth, Session & Storage -->
-  <script src="js/inventory.js"></script>  <!-- Member 2: Catalog & Inventory     -->
-  <script src="js/features.js"></script>   <!-- Member 3: API & Shopping List     -->
-  <script src="js/dashboard.js"></script>  <!-- Member 4: Dashboard/Categories/Nav -->
+  <script src="js/auth.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/features.js"></script>
+  <script src="js/dashboard.js"></script>
 </body>
 </html>

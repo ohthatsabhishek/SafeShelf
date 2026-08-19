@@ -57,10 +57,10 @@ SafeShelf/
 ├── css/
 │   └── styles.css       # All styling
 ├── js/
-│   ├── auth.js          # Member 1: Auth, Session (sessionStorage), Storage (localStorage)
-│   ├── inventory.js     # Member 2: Product catalog data + Inventory CRUD
-│   ├── features.js      # Member 3: Fetch API integration + Shopping List
-│   └── dashboard.js     # Member 4: Dashboard, Categories, Navigation, app bootstrap
+│   ├── auth.js          # Auth, session (sessionStorage), and storage (localStorage)
+│   ├── inventory.js     # Product catalog data and inventory CRUD
+│   ├── features.js      # Fetch API integration and shopping list
+│   └── dashboard.js     # Dashboard, categories, navigation, and app bootstrap
 ├── images/               # Product thumbnail images used by the built-in catalog
 └── README.md
 ```
@@ -119,19 +119,7 @@ built-in seed records. A compatibility read keeps records from the earlier
 shared storage format available to their original owner without exposing them
 to other accounts.
 
-## 9. Team Members & Roles
-
-| Member | Module | Files |
-|---|---|---|
-| Member 1 | Authentication, Session & Data Persistence | `js/auth.js` |
-| Member 2 | Product Catalog & Inventory Management | `js/inventory.js` |
-| Member 3 | Smart Features — REST API + Shopping List | `js/features.js` |
-| Member 4 | Dashboard, Categories & Navigation | `js/dashboard.js` |
-
-(Full division of responsibilities, commits, and demo talking points are
-in the project write-up shared alongside this repository.)
-
-## 10. Architecture / Flow
+## 9. Architecture / Flow
 
 ```
 Login / Register (auth.js)
@@ -149,12 +137,12 @@ Login / Register (auth.js)
 All views live inside one `index.html` and are shown/hidden by
 `NavigationModule` — there is no page reload when navigating.
 
-## 11. Screenshots
+## 10. Screenshots
 
 _Add screenshots of the Dashboard, Inventory, Shopping List, and
 Categories pages here before submission._
 
-## 12. Future Scope
+## 11. Future Scope
 
 - Push/email notifications for expiring items
 - Barcode scanning for faster product entry

@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — inventory.js
  * ------------------------------------------------------------
- * MEMBER 2 MODULE: Product Catalog & Inventory Management
+ * Product Catalog & Inventory Management
  * ------------------------------------------------------------
  * Contains:
  *   - CatalogStore    -> built-in product/category dataset (Topics 15-16: Objects, JSON)

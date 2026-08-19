@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — features.js
  * ------------------------------------------------------------
- * MEMBER 3 MODULE: Smart Features — REST API Integration & Shopping List
+ * Smart Features — REST API Integration & Shopping List
  * ------------------------------------------------------------
  * Contains:
  *   - WebApiModule      -> fetch() + async/await REST API consumption

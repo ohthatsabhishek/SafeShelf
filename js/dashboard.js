@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — dashboard.js
  * ------------------------------------------------------------
- * MEMBER 4 MODULE: Dashboard, Categories Explorer & App Navigation
+ * Dashboard, Categories Explorer & App Navigation
  * ------------------------------------------------------------
  * Contains:
  *   - DashboardModule   -> stats widgets, inventory health, notifications,
@@ -386,6 +386,7 @@
         }
 
         visibleSectionsCount++;
+        const trackedCount = products.filter(item => item.category === cat.name).length;
 
         const section = document.createElement('section');
         section.className = 'category-section';
@@ -433,7 +434,7 @@
               <div>
                 <div style="display: flex; align-items: center;">
                   <h3 class="category-section-name">${cat.name}</h3>
-                  <span class="category-section-count">${matchingProducts.length}</span>
+                  <span class="category-section-count" title="${trackedCount} currently tracked">${matchingProducts.length} catalog / ${trackedCount} tracked</span>
                 </div>
                 <p class="category-section-desc">${cat.description || ''}</p>
               </div>
@@ -615,6 +616,15 @@
           e.preventDefault();
           const targetView = item.getAttribute('data-view');
           this.navigateToView(targetView);
+        });
+      });
+
+      document.querySelectorAll('.stats-card[role="button"]').forEach(card => {
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
         });
       });
 

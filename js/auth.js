@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — auth.js
  * ------------------------------------------------------------
- * MEMBER 1 MODULE: Authentication, Session & Data Persistence
+ * Authentication, Session & Data Persistence
  * ------------------------------------------------------------
  * Contains:
  *   - Shared application state (used across all modules/files)
@@ -498,7 +498,9 @@ const AuthModule = {
       if (!AuthModule.currentUser) return;
       try {
         const userKey = `${this.STORAGE_KEY}_${AuthModule.currentUser.id}`;
-        const ownedProducts = (productsList || []).filter(product => product && product.userId === AuthModule.currentUser.id);
+        const ownedProducts = (productsList || [])
+          .filter(product => product && (!product.userId || product.userId === AuthModule.currentUser.id))
+          .map(product => ({ ...product, userId: AuthModule.currentUser.id }));
         localStorage.setItem(userKey, JSON.stringify(ownedProducts));
       } catch (e) {
         console.error('Error saving data to localStorage', e);
@@ -655,7 +657,7 @@ const AuthModule = {
   };
 
 // ==========================================
-// INITIALIZE MEMBER 1's MODULES
+// Initialize authentication and session state.
 // (Must run before inventory.js/features.js/dashboard.js use `products`)
 // ==========================================
 SessionModule.init();
