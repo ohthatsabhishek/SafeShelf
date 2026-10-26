@@ -1,0 +1,189 @@
+[
+  {
+    "id": 97,
+    "name": "Bath Soap",
+    "price": 40,
+    "currency": "INR",
+    "price_unit": "100 g bar",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/097-soap.jpeg",
+    "description": "A daily bathing soap for a simple fresh-and-clean routine. Check the pack for fragrance and skin-type details.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 11,
+    "name": "Body Lotion",
+    "price": 199,
+    "currency": "INR",
+    "price_unit": "200 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/011-bodylotion.jpeg",
+    "description": "A daily body lotion that helps leave skin feeling soft and moisturised after a bath or shower.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 34,
+    "name": "Deodorant",
+    "price": 220,
+    "currency": "INR",
+    "price_unit": "150 ml can",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/034-deodrant.jpeg",
+    "description": "A refreshing everyday deodorant for a clean, fresh-feeling start to your day. Check the pack for usage directions.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 27,
+    "name": "Hair Conditioner",
+    "price": 180,
+    "currency": "INR",
+    "price_unit": "180 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/027-conditioner.jpeg",
+    "description": "A post-shampoo conditioner designed to leave hair feeling smoother and easier to comb. Choose according to your hair type.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 51,
+    "name": "Hair Oil",
+    "price": 140,
+    "currency": "INR",
+    "price_unit": "200 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/051-hairoil.jpeg",
+    "description": "A daily hair oil for scalp and hair-care routines. Check the ingredient list and directions for your preferred use.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 52,
+    "name": "Hand Cream",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "50 g tube",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/052-handcream.jpeg",
+    "description": "A pocket-friendly hand cream to help keep hands feeling soft after washing or during dry weather.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 92,
+    "name": "Hand Sanitizer",
+    "price": 75,
+    "currency": "INR",
+    "price_unit": "100 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/092-sanitizer.jpeg",
+    "description": "A portable hand sanitizer for on-the-go hand hygiene. Follow the label and keep away from children and flames.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 53,
+    "name": "Handwash",
+    "price": 100,
+    "currency": "INR",
+    "price_unit": "250 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/053-handwash.jpeg",
+    "description": "A convenient liquid handwash for everyday hand-cleaning at home. Use with water and rinse well.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 54,
+    "name": "Himalyan Facewash",
+    "price": 99,
+    "currency": "INR",
+    "price_unit": "estimated pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/054-himalyan-facewash.jpeg",
+    "description": "Himalyan Facewash for everyday use—check the product label for details before publishing.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 61,
+    "name": "Lip Balm",
+    "price": 100,
+    "currency": "INR",
+    "price_unit": "1 unit",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/061-lipbalm.jpeg",
+    "description": "A handy lip balm for everyday lip care, easy to carry in your pocket or bag.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 67,
+    "name": "Moisturizer",
+    "price": 199,
+    "currency": "INR",
+    "price_unit": "100 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/067-moisturizer.jpeg",
+    "description": "A daily moisturiser to help skin feel comfortable and hydrated. Pick the formula that suits your skin type.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 93,
+    "name": "Sanitary Pads",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/093-sanitrypads.jpeg",
+    "description": "Everyday sanitary pads designed for period care. Choose the absorbency and fit that work best for you.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 95,
+    "name": "Shampoo",
+    "price": 180,
+    "currency": "INR",
+    "price_unit": "180 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/095-shampoo.jpeg",
+    "description": "An everyday shampoo for cleansing hair and scalp. Choose a variant suited to your hair type and routine.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 96,
+    "name": "Shaving Cream",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "100 g tube",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/096-shavingcream.jpeg",
+    "description": "A creamy shaving lather to help the razor glide during your grooming routine. Use as directed.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 103,
+    "name": "Sunscreen",
+    "price": 299,
+    "currency": "INR",
+    "price_unit": "50 g tube",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/103-sunscreen.jpeg",
+    "description": "A daily sunscreen for outdoor and everyday skincare routines. Check the SPF and usage directions on the pack.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 107,
+    "name": "Toothbrush",
+    "price": 60,
+    "currency": "INR",
+    "price_unit": "1 unit",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/107-toothbrush.jpeg",
+    "description": "A daily toothbrush for your oral-care routine. Replace regularly and choose bristles that feel comfortable.",
+    "category": "Personal Care"
+  },
+  {
+    "id": 108,
+    "name": "Toothpaste",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "150 g tube",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/108-toothpaste.jpeg",
+    "description": "An everyday toothpaste for routine brushing. Follow the pack directions and your dental professional's advice.",
+    "category": "Personal Care"
+  }
+]

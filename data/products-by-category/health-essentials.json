@@ -1,0 +1,13 @@
+[
+  {
+    "id": 77,
+    "name": "Paracetamol",
+    "price": 20,
+    "currency": "INR",
+    "price_unit": "10-tablet strip",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/077-paracetamol.png",
+    "description": "A common over-the-counter pain and fever medicine. Use only as directed on the pack or by a healthcare professional.",
+    "category": "Health Essentials"
+  }
+]

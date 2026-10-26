@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — auth.js
  * ------------------------------------------------------------
- * Authentication, Session & Data Persistence
+ * MEMBER 1 MODULE: Authentication, Session & Data Persistence
  * ------------------------------------------------------------
  * Contains:
  *   - Shared application state (used across all modules/files)
@@ -26,6 +26,101 @@ let products = [];
 let currentEditId = null;
 let sortField = 'expiryDate';
 let sortDirection = 'asc';
+
+// ==========================================
+// SHARED EMAIL VALIDATION HELPER
+// ------------------------------------------------------------
+// Used by AuthModule (login/register) and ProfileForm wherever an
+// email needs to be checked before a form is submitted/saved.
+// We deliberately do NOT rely only on <input type="email">, since
+// native browser validation is inconsistent and easy to bypass
+// (e.g. via autofill, programmatic value changes, or older browsers).
+// ==========================================
+function isValidEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  const value = email.trim();
+  // RFC-5322 "good enough" practical email pattern: local@domain.tld
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  return EMAIL_REGEX.test(value);
+}
+
+// ==========================================
+// SHARED NOTIFICATION POPUP (replaces alert())
+// ------------------------------------------------------------
+// One reusable function used by every file instead of the
+// browser's alert() box. It shows a small message inside the
+// page (bottom-right corner) that fades away on its own.
+// type can be: 'success', 'error', 'warning', or 'info'
+// ==========================================
+function showNotification(message, type = 'info') {
+  // Find (or create) the box that holds all notification messages
+  let container = document.getElementById('notificationContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'notificationContainer';
+    container.className = 'notification-container';
+    document.body.appendChild(container);
+  }
+
+  // Pick the CSS class that matches the message type
+  let typeClass = 'notification-info';
+  if (type === 'success') typeClass = 'notification-success';
+  else if (type === 'error') typeClass = 'notification-error';
+  else if (type === 'warning') typeClass = 'notification-warning';
+
+  // Build and show the notification box
+  const note = document.createElement('div');
+  note.className = 'notification-box ' + typeClass;
+  note.textContent = message;
+  container.appendChild(note);
+
+  // Fade it in (small delay so the CSS transition can play)
+  setTimeout(() => note.classList.add('notification-show'), 10);
+
+  // Fade it out and remove it after a few seconds
+  setTimeout(() => {
+    note.classList.remove('notification-show');
+    setTimeout(() => note.remove(), 300);
+  }, 3000);
+}
+
+// ==========================================
+// SHARED CONFIRMATION MODAL (replaces confirm())
+// ------------------------------------------------------------
+// One reusable function used by every file instead of the
+// browser's confirm() box. It fills in the title/message/button
+// text on the #confirmModal markup (see index.html) and shows it.
+// The action passed in as `onConfirm` only runs if the user
+// clicks the confirm button.
+// ==========================================
+function showConfirm(title, message, onConfirm, confirmButtonText) {
+  const modal = document.getElementById('confirmModal');
+  const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+  if (!modal || !confirmBtn) return;
+
+  document.getElementById('confirmModalTitle').textContent = title;
+  document.getElementById('confirmModalMessage').textContent = message;
+  confirmBtn.textContent = confirmButtonText || 'Confirm';
+
+  // Replace the button's click action with this action's own logic.
+  // Setting .onclick (instead of addEventListener) means each call
+  // simply overwrites the previous handler, so clicks never stack up.
+  confirmBtn.onclick = function () {
+    modal.classList.remove('show');
+    if (onConfirm) onConfirm();
+  };
+
+  modal.classList.add('show');
+}
+
+// Wire up the Cancel button once. It just hides the modal without
+// running the confirm action.
+const confirmModalCancelBtn = document.getElementById('confirmModalCancelBtn');
+if (confirmModalCancelBtn) {
+  confirmModalCancelBtn.addEventListener('click', () => {
+    document.getElementById('confirmModal').classList.remove('show');
+  });
+}
 
 // ==========================================
 // SESSION STORAGE MODULE (Topic 23: Session Storage)
@@ -107,33 +202,18 @@ const AuthModule = {
   currentUser: null,
 
   init() {
-    const users = this.getUsers();
-    if (!users.find(u => u.email === 'demo@safeshelf.com')) {
-      users.push({
-        id: 'demo-1',
-        name: 'Demo User',
-        email: 'demo@safeshelf.com',
-        password: 'password',
-        createdAt: new Date().toISOString()
-      });
-      localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
-    }
-
     this.currentUser = this.getCurrentUser();
 
     const appContainer = document.getElementById('appContainer');
     const authContainer = document.getElementById('authContainer');
-    const bottomNav = document.querySelector('.bottom-nav');
 
     if (this.currentUser) {
       if (authContainer) authContainer.style.display = 'none';
       if (appContainer) appContainer.style.display = 'flex';
-      if (bottomNav) bottomNav.style.removeProperty('display');
       this.updateUserUI();
     } else {
       if (authContainer) authContainer.style.display = 'flex';
       if (appContainer) appContainer.style.display = 'none';
-      if (bottomNav) bottomNav.style.display = 'none';
     }
 
     this.bindEvents();
@@ -167,7 +247,7 @@ const AuthModule = {
       if (hour < 12) timeGreeting = 'Good morning';
       else if (hour < 18) timeGreeting = 'Good afternoon';
 
-      greetingEl.textContent = `${timeGreeting}, ${this.currentUser.name.split(' ')[0]} 👋`;
+      greetingEl.textContent = `${timeGreeting}, ${this.currentUser.name.split(' ')[0]}`;
     }
 
     const navAvatar = document.getElementById('navAvatar');
@@ -230,89 +310,130 @@ const AuthModule = {
       });
     }
 
+    const fillDemoBtn = document.getElementById('fillDemoCredentialsBtn');
+    if (fillDemoBtn) {
+      fillDemoBtn.addEventListener('click', () => {
+        const emailInput = document.getElementById('loginEmail');
+        const passInput = document.getElementById('loginPassword');
+        if (emailInput) emailInput.value = 'demo@safeshelf.com';
+        if (passInput) passInput.value = 'password';
+        showNotification('Demo account credentials filled.', 'info');
+      });
+    }
+
     if (loginForm) {
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
-
-        const users = this.getUsers();
-        const user = users.find(u => u.email === email && u.password === password);
-
-        if (user) {
-          loginError.textContent = '';
-          const sessionUser = this.toSessionUser(user);
+        if (!email || !isValidEmail(email)) { loginError.textContent = 'Please enter a valid email address.'; return; }
+        loginError.textContent = 'Signing in…';
+        try {
+          const response = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Login failed.');
+          localStorage.setItem('safeshelf_auth_token', data.token);
+          const sessionUser = { id:data.user.id, name:data.user.name, email:data.user.email, role:data.user.role, notificationsEnabled:true, reminderDays:7 };
           localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(sessionUser));
           this.currentUser = sessionUser;
+          await StorageModule.syncFromServer();
           location.reload();
-        } else {
-          loginError.textContent = 'Invalid email or password.';
-        }
+        } catch (error) { loginError.textContent = error.message || 'Unable to connect to the server.'; }
       });
     }
 
     if (registerForm) {
-      registerForm.addEventListener('submit', (e) => {
+      registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('regName').value.trim();
-        const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
         const confirmPassword = document.getElementById('regConfirm').value;
-
-        if (name.length < 2) return registerError.textContent = 'Please enter your full name.';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return registerError.textContent = 'Please enter a valid email.';
-        if (password.length < 6) return registerError.textContent = 'Password must contain at least 6 characters.';
+        if (name.length < 2) return registerError.textContent = 'Name must contain at least 2 characters.';
+        if (!isValidEmail(email)) return registerError.textContent = 'Please enter a valid email address.';
+        if (password.length < 8) return registerError.textContent = 'Password must contain at least 8 characters.';
         if (password !== confirmPassword) return registerError.textContent = 'Passwords do not match.';
-
-        const users = this.getUsers();
-        if (users.find(u => u.email === email)) {
-          return registerError.textContent = 'An account with this email already exists.';
-        }
-
-        const newUser = {
-          id: 'user-' + Date.now(),
-          name,
-          email,
-          password,
-          createdAt: new Date().toISOString()
-        };
-
-        users.push(newUser);
-        localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
-
-        registerForm.style.display = 'none';
-        loginForm.style.display = 'block';
-        loginError.textContent = 'Account created successfully. Please login.';
-        loginError.style.color = 'var(--primary)';
+        registerError.textContent = 'Creating account…';
+        try {
+          const response = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,email,password}) });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Registration failed.');
+          registerForm.style.display = 'none'; loginForm.style.display = 'block';
+          registerError.textContent = ''; loginError.textContent = 'Account created. Please sign in.'; loginError.style.color = 'var(--primary)';
+          document.getElementById('loginEmail').value = email;
+        } catch (error) { registerError.textContent = error.message || 'Unable to connect to the server.'; }
       });
     }
 
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
-      profileForm.addEventListener('submit', (e) => {
+      profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newName = document.getElementById('profileName').value.trim();
+        const newEmail = document.getElementById('profileEmail').value.trim();
         const profileMessage = document.getElementById('profileMessage');
 
         if (!newName) {
           profileMessage.style.color = 'var(--danger)';
-          return profileMessage.textContent = 'Name is required.';
+          return profileMessage.textContent = 'Full Name is required.';
+        }
+
+        if (!newEmail) {
+          profileMessage.style.color = 'var(--danger)';
+          return profileMessage.textContent = 'Email address is required.';
+        }
+
+        if (!isValidEmail(newEmail)) {
+          profileMessage.style.color = 'var(--danger)';
+          return profileMessage.textContent = 'Please enter a valid email address (e.g. name@example.com).';
+        }
+
+        profileMessage.style.color = 'var(--text-secondary)';
+        profileMessage.textContent = 'Saving profile changes…';
+
+        const token = localStorage.getItem('safeshelf_auth_token');
+        if (token) {
+          try {
+            const resp = await fetch('/api/auth/profile', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ name: newName, email: newEmail })
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+              profileMessage.style.color = 'var(--danger)';
+              profileMessage.textContent = data.error || 'Failed to update profile on server.';
+              return;
+            }
+          } catch (err) {
+            console.warn('Server profile update skipped, updating locally:', err.message);
+          }
         }
 
         const users = this.getUsers();
-        const userIndex = users.findIndex(u => u.id === this.currentUser.id);
-        if (userIndex === -1) return;
+        const isDuplicateEmail = users.some(u => u.email.toLowerCase() === newEmail.toLowerCase() && u.id !== this.currentUser.id);
+        if (isDuplicateEmail) {
+          profileMessage.style.color = 'var(--danger)';
+          return profileMessage.textContent = 'This email address is already in use by another account.';
+        }
 
-        users[userIndex].name = newName;
-        localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+        const userIndex = users.findIndex(u => u.id === this.currentUser.id);
+        if (userIndex !== -1) {
+          users[userIndex].name = newName;
+          users[userIndex].email = newEmail;
+          localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+        }
 
         this.currentUser.name = newName;
+        this.currentUser.email = newEmail;
         localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(this.currentUser));
 
         this.updateUserUI();
 
         const profilePageName = document.getElementById('profilePageName');
         if (profilePageName) profilePageName.textContent = newName;
+        const profilePageEmail = document.getElementById('profilePageEmail');
+        if (profilePageEmail) profilePageEmail.textContent = newEmail;
         const profilePageAvatar = document.getElementById('profilePageAvatar');
         if (profilePageAvatar) profilePageAvatar.textContent = newName.charAt(0).toUpperCase();
 
@@ -372,12 +493,8 @@ const AuthModule = {
 
   logout() {
     localStorage.removeItem(this.CURRENT_USER_KEY);
+    localStorage.removeItem('safeshelf_auth_token');
     location.reload();
-  },
-
-  toSessionUser(user) {
-    const { password, ...sessionUser } = user;
-    return sessionUser;
   }
 };
 
@@ -387,20 +504,49 @@ const AuthModule = {
 
     // Safe numeric quantity extractor (e.g. "2 kg" -> 2, "1 jar" -> 1, "0" -> 0)
     getNumericQuantity(quantityStr) {
-      if (typeof quantityStr === 'number') return isNaN(quantityStr) ? 0 : quantityStr;
-      if (!quantityStr || typeof quantityStr !== 'string') return 0;
-      const match = quantityStr.trim().match(/^([0-9]+(?:\.[0-9]+)?)/);
-      return match ? parseFloat(match[1]) : 0;
+      if (typeof quantityStr === 'number') return Number.isFinite(quantityStr) && quantityStr >= 0 ? quantityStr : null;
+      if (typeof quantityStr !== 'string' || !quantityStr.trim()) return null;
+      const match = quantityStr.trim().match(/^([0-9]+(?:\.[0-9]+)?)(?=\s|$|[a-zA-Z])/);
+      return match ? Number.parseFloat(match[1]) : null;
     },
 
     // Stock state helpers
     isOutOfStock(quantityStr) {
-      return this.getNumericQuantity(quantityStr) <= 0;
+      const qty = this.getNumericQuantity(quantityStr);
+      return qty !== null && qty <= 0;
     },
 
     isLowStock(quantityStr, threshold = 1) {
       const qty = this.getNumericQuantity(quantityStr);
-      return qty > 0 && qty <= threshold;
+      return qty !== null && qty > 0 && qty <= threshold;
+    },
+
+    async syncFromServer() {
+      const token = localStorage.getItem('safeshelf_auth_token');
+      if (!token) return false;
+      try {
+        const response = await fetch('/api/user-data', { headers: { Authorization: `Bearer ${token}` } });
+        if (response.status === 401) {
+          // Token expired or invalid
+          AuthModule.logout();
+          return false;
+        }
+        if (!response.ok) return false;
+        const data = await response.json(); const uid = AuthModule.currentUser && AuthModule.currentUser.id;
+        if (!uid) return false;
+        const allProducts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]').filter(p => p.userId !== uid);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify([...allProducts, ...(data.inventory || []).map(p => ({...p,userId:uid}))]));
+        const stored = JSON.parse(localStorage.getItem(this.SHOPPING_LIST_KEY) || '{}'); const raw = {};
+        if (Array.isArray(stored)) stored.forEach(entry => { if (entry && entry.userId) raw[entry.userId] = entry.items || []; });
+        else Object.assign(raw, stored);
+        raw[uid] = data.shoppingList || []; localStorage.setItem(this.SHOPPING_LIST_KEY, JSON.stringify(raw));
+        return true;
+      } catch (e) { console.warn('Could not sync SafeShelf data from server:', e.message); return false; }
+    },
+    async syncToServer(inventory, shoppingList) {
+      const token = localStorage.getItem('safeshelf_auth_token'); if (!token) return false;
+      try { const response = await fetch('/api/user-data', { method:'PUT', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({inventory,shoppingList}) }); return response.ok; }
+      catch (e) { console.warn('Could not save SafeShelf data to server:', e.message); return false; }
     },
 
     // Load user-scoped shopping list from localStorage
@@ -460,6 +606,7 @@ const AuthModule = {
         allLists = allLists.filter(u => u && u.userId !== uid);
         allLists.push({ userId: uid, items: items || [] });
         localStorage.setItem(this.SHOPPING_LIST_KEY, JSON.stringify(allLists));
+        const inventory = this.loadProducts(); this.syncToServer(inventory, items || []);
       } catch (e) {
         console.error('Error saving shopping list to localStorage', e);
       }
@@ -468,25 +615,12 @@ const AuthModule = {
     // Load data from localStorage
     loadProducts() {
       try {
-        const userId = AuthModule.currentUser ? AuthModule.currentUser.id : null;
-        if (!userId) return [];
-
-        const userKey = `${this.STORAGE_KEY}_${userId}`;
-        const savedUserData = localStorage.getItem(userKey);
-        if (savedUserData) return JSON.parse(savedUserData);
-
-        // Read the old shared store once so existing users keep their data.
-        const legacyData = localStorage.getItem(this.STORAGE_KEY);
-        const legacyProducts = legacyData ? JSON.parse(legacyData) : [];
-        const existingUserProducts = Array.isArray(legacyProducts)
-          ? legacyProducts.filter(product => product && product.userId === userId)
-          : [];
-        const initialProducts = existingUserProducts.length > 0
-          ? existingUserProducts
-          : userId === 'demo-1' ? this.getSeedData() : [];
-
-        localStorage.setItem(userKey, JSON.stringify(initialProducts));
-        return initialProducts;
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        let allProducts = data ? JSON.parse(data) : this.getSeedData();
+        if (AuthModule.currentUser) {
+          return allProducts.filter(p => p.userId === AuthModule.currentUser.id);
+        }
+        return [];
       } catch (e) {
         console.error('Error loading data from localStorage', e);
         return [];
@@ -497,11 +631,17 @@ const AuthModule = {
     saveProducts(productsList) {
       if (!AuthModule.currentUser) return;
       try {
-        const userKey = `${this.STORAGE_KEY}_${AuthModule.currentUser.id}`;
-        const ownedProducts = (productsList || [])
-          .filter(product => product && (!product.userId || product.userId === AuthModule.currentUser.id))
-          .map(product => ({ ...product, userId: AuthModule.currentUser.id }));
-        localStorage.setItem(userKey, JSON.stringify(ownedProducts));
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        let allProducts = data ? JSON.parse(data) : this.getSeedData();
+        
+        // Remove current user's old products
+        allProducts = allProducts.filter(p => p.userId !== AuthModule.currentUser.id);
+        
+        // Add updated products
+        allProducts = [...allProducts, ...productsList];
+        
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allProducts));
+        this.syncToServer(productsList, this.loadShoppingList());
       } catch (e) {
         console.error('Error saving data to localStorage', e);
       }
@@ -586,9 +726,13 @@ const AuthModule = {
       
       // Helper to offset dates
       const getOffsetDate = (days) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() + days);
-        return d.toISOString().split('T')[0];
+        // Format from local calendar fields to avoid UTC conversion shifting the date.
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        d.setDate(d.getDate() + days);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       };
 
       return [
@@ -600,7 +744,7 @@ const AuthModule = {
           quantity: '2 kg',
           expiryDate: getOffsetDate(11),
           warrantyDate: '',
-          imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=120',
+          imageUrl: './images/rice.jpeg',
           description: 'Premium long grain basmati rice stored in pantry container.',
           status: 'Safe'
         },
@@ -657,7 +801,7 @@ const AuthModule = {
   };
 
 // ==========================================
-// Initialize authentication and session state.
+// INITIALIZE MEMBER 1's MODULES
 // (Must run before inventory.js/features.js/dashboard.js use `products`)
 // ==========================================
 SessionModule.init();

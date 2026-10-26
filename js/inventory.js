@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — inventory.js
  * ------------------------------------------------------------
- * Product Catalog & Inventory Management
+ * MEMBER 2 MODULE: Product Catalog & Inventory Management
  * ------------------------------------------------------------
  * Contains:
  *   - CatalogStore    -> built-in product/category dataset (Topics 15-16: Objects, JSON)
@@ -558,105 +558,279 @@
   };
 
 
+  // Helper to resolve real product image or match from CatalogStore
+  function resolveProductImage(item) {
+    if (!item) return null;
+
+    // 1. If item has a direct local image URL from assets, verify and use it
+    if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
+      const trimmed = item.imageUrl.trim();
+      if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+    }
+
+    // 2. If item has a catalogProductId, look it up in CatalogStore
+    if (item.catalogProductId) {
+      const catProd = CatalogStore.getProductById(item.catalogProductId);
+      if (catProd && catProd.image) return catProd.image;
+    }
+
+    // 3. Robust keyword & alias matching against item name (word boundaries prevent false substring matches)
+    const rawName = (item.name || '').toLowerCase().trim();
+    if (!rawName) return null;
+
+    const assetRules = [
+      { regex: /\b(green\s*apple|red\s*apple|apples?)\b/i, not: /\b(pineapple|apple\s*cider)\b/i, file: './images/apple.jpeg' },
+      { regex: /\b(bananas?|plantains?)\b/i, file: './images/banana.jpeg' },
+      { regex: /\b(oranges?|mandarins?|tangerines?|clementines?)\b/i, file: './images/orange.jpeg' },
+      { regex: /\b(mango(es)?|alphonso)\b/i, file: './images/mango.jpeg' },
+      { regex: /\b(potatoes?|potato|aloo)\b/i, not: /\b(sweet\s*potato)\b/i, file: './images/potato.jpeg' },
+      { regex: /\b(tomatoes?|tomato)\b/i, not: /\b(sauce|ketchup|paste)\b/i, file: './images/tomato.jpeg' },
+      { regex: /\b(onions?|onion|shallots?|pyaz)\b/i, file: './images/onions.jpeg' },
+      { regex: /\b(carrots?|carrot|gajar)\b/i, file: './images/carrot.jpeg' },
+      { regex: /\b(milk|whole\s*milk|dairy\s*milk|toned\s*milk)\b/i, not: /\b(coconut\s*milk|almond\s*milk|soy\s*milk|milk\s*chocolate)\b/i, file: './images/milk.jpeg' },
+      { regex: /\b(butter|makkhan)\b/i, not: /\b(peanut\s*butter|almond\s*butter)\b/i, file: './images/butter.jpeg' },
+      { regex: /\b(cheese|cheddar|mozzarella|parmesan|gouda|paneer)\b/i, file: './images/cheese.jpeg' },
+      { regex: /\b(greek\s*yogurt|yogurt|yoghurt|curd|dahi)\b/i, file: './images/greek_yogurt.jpeg' },
+      { regex: /\b(dishwash\w*|dish\s*soap|dishwasher\s*liquid|dishwasher\s*gel|vim|pril)\b/i, file: './images/dishwash.jpeg' },
+      { regex: /\b(detergent|laundry\s*powder|washing\s*powder|laundry\s*liquid|surf|tide|ariel)\b/i, file: './images/detergent.jpeg' },
+      { regex: /\b(floor\s*cleaner|surface\s*cleaner|lizol|mop\s*cleaner)\b/i, file: './images/floorcleaner.jpeg' },
+      { regex: /\b(saniti[sz]er|disinfectant\s*spray|antibacterial\s*spray|rubbing\s*alcohol)\b/i, file: './images/sanitizer.jpeg' },
+      { regex: /\b(basmati|basmati\s*rice|rice|brown\s*rice|jasmine\s*rice|chawal)\b/i, not: /\b(rice\s*cake|rice\s*flour)\b/i, file: './images/rice.jpeg' },
+      { regex: /\b(wheat\s*flour|whole\s*wheat|flour|atta|maida)\b/i, file: './images/wheat_flour.jpeg' },
+      { regex: /\b(rolled\s*oats|oats?|oatmeal)\b/i, file: './images/rolledoats.jpeg' },
+      { regex: /\b(quinoa)\b/i, file: './images/quinoa.jpeg' },
+      { regex: /\b(olive\s*oil|cooking\s*oil|canola\s*oil|sunflower\s*oil|edible\s*oil)\b/i, file: './images/oliveoil.jpeg' },
+      { regex: /\b(honey|wildflower\s*honey|raw\s*honey)\b/i, file: './images/honey.jpeg' },
+      { regex: /\b(black\s*pepper|peppercorns?|kali\s*mirch)\b/i, file: './images/black_pepper.jpeg' },
+      { regex: /\b(pink\s*salt|himalayan\s*salt|rock\s*salt|table\s*salt|sea\s*salt|salt)\b/i, file: './images/pinksalt.jpeg' },
+      { regex: /\b(body\s*lotion|lotion|body\s*moisturi[sz]er|moisturi[sz]ing\s*lotion)\b/i, file: './images/bodylotion.jpeg' },
+      { regex: /\b(face\s*wash|facewash|facial\s*cleanser|face\s*cleanser)\b/i, file: './images/himalyan_facewash.jpeg' },
+      { regex: /\b(sunscreen|sunblock|spf\s*50|spf\s*30)\b/i, file: './images/sunscreen.jpeg' },
+      { regex: /\b(electric\s*kettle|kettle)\b/i, file: './images/electric_kettle.jpeg' },
+      { regex: /\b(blender|smoothie\s*maker|compact\s*blender|food\s*processor)\b/i, file: './images/blender.jpeg' },
+      { regex: /\b(toaster|bread\s*toaster|2-slice\s*toaster|pop-up\s*toaster)\b/i, file: './images/twoslicebreadtoaster.jpeg' },
+      { regex: /\b(paracetamol|painkiller|tylenol|panadol|acetaminophen|aspirin|crocin)\b/i, file: './images/paracetamol.png' },
+      { regex: /\b(paper\s*towels?|kitchen\s*roll|kitchen\s*towels?|tissue\s*paper|tissues?|napkins?)\b/i, file: './images/papertowels.png' }
+    ];
+
+    for (const rule of assetRules) {
+      if (rule.regex.test(rawName)) {
+        if (!rule.not || !rule.not.test(rawName)) {
+          return rule.file;
+        }
+      }
+    }
+
+    // 4. Exact catalog product match as fallback
+    const allCat = CatalogStore.getAllProducts();
+    const exactMatch = allCat.find(p => p.name.toLowerCase() === rawName);
+    if (exactMatch && exactMatch.image) return exactMatch.image;
+
+    // 5. If remote URL was given, use it if no local asset matched
+    if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
+      return item.imageUrl.trim();
+    }
+
+    return null;
+  }
+
+  // Generates thumbnail markup with real image or clean typographic monogram
+  function getThumbnailMarkup(item) {
+    const imgUrl = resolveProductImage(item);
+    const monogram = item.name ? item.name.trim().slice(0, 2).toUpperCase() : 'SS';
+    const isPackaging = (item.category === 'Appliances' || item.category === 'Medicine');
+    const imgClass = isPackaging ? 'product-thumbnail-img img-contain' : 'product-thumbnail-img';
+    if (imgUrl) {
+      return `
+        <div class="product-thumbnail-box ${isPackaging ? 'box-contain' : ''}" aria-hidden="true">
+          <img src="${imgUrl}" alt="${item.name}" class="${imgClass}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <span class="product-thumbnail-fallback" style="display: none;">${monogram}</span>
+        </div>
+      `;
+    }
+    return `
+      <div class="product-thumbnail-box product-thumbnail-monogram" aria-hidden="true">
+        <span class="product-thumbnail-fallback">${monogram}</span>
+      </div>
+    `;
+  }
+
+  // Checks whether one product matches the current search box, category
+  // dropdown, and status dropdown.
+  function productMatchesFilters(item, searchQuery, categoryFilter, statusFilter) {
+    const nameMatches = item.name.toLowerCase().includes(searchQuery);
+    const descriptionMatches = item.description && item.description.toLowerCase().includes(searchQuery);
+    const matchesSearch = nameMatches || descriptionMatches;
+
+    const matchesCategory = !categoryFilter || categoryFilter === 'All Categories' || item.category === categoryFilter;
+
+    const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
+    const matchesStatus = !statusFilter || statusFilter === 'All Statuses' || statusInfo.text === statusFilter;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  }
+
   const InventoryModule = {
-    escapeHTML(value) {
-      return String(value ?? '').replace(/[&<>'"]/g, character => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[character]));
+    currentViewMode: 'table', // 'table' | 'grid'
+
+    // Resolves product image
+    getProductImage(item) {
+      return resolveProductImage(item);
     },
 
-    // Renders the list table based on filters, search, and sorting
+    // Generates thumbnail markup with image or monogram
+    getThumbnailMarkup(item) {
+      return getThumbnailMarkup(item);
+    },
+
+    // Renders the list table and retail grid based on filters, search, and sorting
     renderProductTable(productsList) {
       const tbody = document.getElementById('productTableBody');
+      const gridContainer = document.getElementById('productGridWrapper');
       const recentBody = document.getElementById('recentTableBody');
-      if (!tbody) return;
 
-      tbody.innerHTML = '';
+      // Update Column Sort Glyphs in Table Header
+      this.updateSortGlyphs();
 
-      // Get values from filters
+      // Read filter inputs safely
       const searchInput = document.getElementById('searchInput');
-      const categoryInput = document.getElementById('categoryFilter');
-      const statusInput = document.getElementById('statusFilter');
-      const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
-      const categoryFilter = categoryInput ? categoryInput.value : 'All Categories';
-      const statusFilter = statusInput ? statusInput.value : 'All Statuses';
+      const categorySelect = document.getElementById('categoryFilter');
+      const statusSelect = document.getElementById('statusFilter');
 
-      // Filter products
-      let filtered = productsList.filter(item => {
-        const searchableText = [item.name, item.brand, item.category, item.quantity, item.description]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        const matchesSearch = searchableText.includes(searchQuery);
-        const matchesCategory = !categoryFilter || categoryFilter === 'All Categories' || item.category === categoryFilter;
-        
-        const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
-        const matchesStatus = !statusFilter || statusFilter === 'All Statuses' || statusInfo.text === statusFilter;
+      const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const categoryFilter = categorySelect ? categorySelect.value : 'All Categories';
+      const statusFilter = statusSelect ? statusSelect.value : 'All Statuses';
 
-        return matchesSearch && matchesCategory && matchesStatus;
-      });
+      // Keep only matching items
+      let filtered = [];
+      for (let i = 0; i < productsList.length; i++) {
+        const item = productsList[i];
+        if (productMatchesFilters(item, searchQuery, categoryFilter, statusFilter)) {
+          filtered.push(item);
+        }
+      }
 
       // Apply Sort
       filtered = DashboardModule.sortProducts(filtered, sortField, sortDirection);
 
-      const emptyState = document.getElementById('inventoryEmptyState');
-      if (filtered.length === 0) {
-        const hasProducts = productsList.length > 0;
-        tbody.innerHTML = `<tr><td colspan="6" class="inventory-table-empty">${hasProducts ? 'No products found matching your filters.' : 'Your inventory is empty.'}</td></tr>`;
-        if (emptyState) emptyState.style.display = hasProducts ? 'none' : 'block';
-      } else {
-        if (emptyState) emptyState.style.display = 'none';
-        filtered.forEach(item => {
-          const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
-          const daysLeft = DashboardModule.getDaysRemaining(item.expiryDate);
-          
-          let expiryDisplay = this.escapeHTML(item.expiryDate);
-          if (daysLeft < 0) {
-            expiryDisplay += ` (Expired)`;
-          } else if (daysLeft === 0) {
-            expiryDisplay += ` (Today)`;
-          } else {
-            expiryDisplay += ` (${daysLeft}d left)`;
-          }
+      // 1. RENDER TABLE VIEW
+      if (tbody) {
+        tbody.innerHTML = '';
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 36px 16px;">No products match the selected filters.</td></tr>`;
+        } else {
+          filtered.forEach(item => {
+            const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
+            const daysLeft = DashboardModule.getDaysRemaining(item.expiryDate);
+            
+            let countdownPill = '';
+            if (daysLeft === Infinity) {
+              countdownPill = '<span class="table-relative-pill pill-muted">No date</span>';
+            } else if (daysLeft < 0) {
+              countdownPill = `<span class="table-relative-pill pill-danger">${Math.abs(daysLeft)}d expired</span>`;
+            } else if (daysLeft === 0) {
+              countdownPill = `<span class="table-relative-pill pill-warn">Today</span>`;
+            } else if (daysLeft <= 7) {
+              countdownPill = `<span class="table-relative-pill pill-warn">${daysLeft}d left</span>`;
+            } else {
+              countdownPill = `<span class="table-relative-pill pill-safe">${daysLeft}d left</span>`;
+            }
 
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>
-              <div class="product-cell">
-                <div class="product-img-placeholder">📦</div>
-                <div>
-                  <span class="product-name">${this.escapeHTML(item.name)}</span>
-                  <span class="product-meta">${this.escapeHTML(item.description || 'No description')}</span>
+            const tr = document.createElement('tr');
+            tr.className = 'inventory-table-row';
+            tr.innerHTML = `
+              <td class="col-product">
+                <div class="product-cell">
+                  ${getThumbnailMarkup(item)}
+                  <div class="product-info-col">
+                    <span class="product-name" title="${item.name}">${item.name}</span>
+                    <span class="product-meta">${item.description || item.category}</span>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td>${this.escapeHTML(item.category)}</td>
-            <td>${this.escapeHTML(item.quantity)}</td>
-            <td>${expiryDisplay}</td>
-            <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
-            <td>
-              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button class="btn btn-outline btn-sm action-view" data-id="${item.id}">View</button>
-                <button class="btn btn-secondary btn-sm action-edit" data-id="${item.id}">Edit</button>
-                <button class="btn btn-outline btn-sm action-shop" data-id="${item.id}" title="Add to Shopping List">🛒 Add to List</button>
-                <button class="btn btn-danger btn-sm action-delete" data-id="${item.id}">Delete</button>
-              </div>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
+              </td>
+              <td class="col-category"><span class="table-category-tag">${item.category}</span></td>
+              <td class="col-quantity"><strong class="table-quantity-val">${item.quantity}</strong></td>
+              <td class="col-expiry">
+                <div class="table-expiry-wrap">
+                  <span class="table-date-val">${item.expiryDate || '—'}</span>
+                  ${countdownPill}
+                </div>
+              </td>
+              <td class="col-status"><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+              <td class="col-actions" style="text-align: right;">
+                <div class="table-actions">
+                  <button type="button" class="table-btn table-btn-shop action-shop" data-id="${item.id}" title="Add to shopping list">+ List</button>
+                  <button type="button" class="table-btn table-btn-secondary action-edit" data-id="${item.id}" title="Edit product">Edit</button>
+                  <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}" title="View details">View</button>
+                  <button type="button" class="table-btn table-btn-danger action-delete" data-id="${item.id}" title="Delete product">Delete</button>
+                </div>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
       }
 
-      // Populate dashboard recent items (max 5)
+      // 2. RENDER RETAIL PRODUCT GRID VIEW
+      if (gridContainer) {
+        gridContainer.innerHTML = '';
+        if (filtered.length === 0) {
+          gridContainer.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 48px 16px; border: 1px dashed var(--border-hairline); border-radius: var(--radius); background: var(--surface-panel);">
+              <p style="font-size: 13px; color: var(--text-muted); font-weight: 500;">No products found matching active filters.</p>
+            </div>
+          `;
+        } else {
+          filtered.forEach(item => {
+            const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
+            const daysLeft = DashboardModule.getDaysRemaining(item.expiryDate);
+            const imgUrl = resolveProductImage(item);
+            const monogram = item.name ? item.name.trim().slice(0, 2).toUpperCase() : 'SS';
+
+            let daysText = daysLeft < 0 ? `${Math.abs(daysLeft)}d expired` : (daysLeft === 0 ? 'Expires today' : `${daysLeft}d left`);
+            if (daysLeft === Infinity) daysText = 'No date';
+
+            const card = document.createElement('div');
+            card.className = 'retail-card';
+            card.innerHTML = `
+              <div class="retail-card-header">
+                <span class="retail-card-cat-pill">${item.category}</span>
+                <span class="badge ${statusInfo.class}">${daysText}</span>
+              </div>
+              <div class="retail-card-image-box">
+                ${imgUrl ? 
+                  `<img src="${imgUrl}" alt="${item.name}" class="retail-card-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div class="retail-card-fallback" style="display:none;"><span class="retail-card-monogram">${monogram}</span><span class="retail-card-fallback-sub">${item.category}</span></div>` : 
+                  `<div class="retail-card-fallback"><span class="retail-card-monogram">${monogram}</span><span class="retail-card-fallback-sub">${item.category}</span></div>`
+                }
+              </div>
+              <div class="retail-card-content">
+                <h4 class="retail-card-title" title="${item.name}">${item.name}</h4>
+                <div class="retail-card-meta">
+                  <span class="retail-card-qty">${item.quantity}</span>
+                  <span class="retail-card-date">${item.expiryDate || 'No date'}</span>
+                </div>
+              </div>
+              <div class="retail-card-actions">
+                <button type="button" class="table-btn table-btn-shop action-shop" data-id="${item.id}" title="Add to Shopping List" style="flex: 1.4;">+ List</button>
+                <button type="button" class="table-btn table-btn-secondary action-edit" data-id="${item.id}" style="flex: 1;">Edit</button>
+                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}" style="flex: 1;">View</button>
+                <button type="button" class="table-btn table-btn-danger action-delete" data-id="${item.id}" title="Delete product" style="width: 28px; padding: 0;">✕</button>
+              </div>
+            `;
+            gridContainer.appendChild(card);
+          });
+        }
+      }
+
+      // 3. POPULATE DASHBOARD RECENT ITEMS TABLE (Max 5)
       if (recentBody) {
         recentBody.innerHTML = '';
-        const recentItems = productsList.slice(-5).reverse(); // Latest items added
+        const recentItems = productsList.slice(-5).reverse();
         if (recentItems.length === 0) {
-          recentBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No products added yet.</td></tr>`;
+          recentBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No products added yet.</td></tr>`;
         } else {
           recentItems.forEach(item => {
             const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
@@ -664,16 +838,16 @@
             tr.innerHTML = `
               <td>
                 <div class="product-cell">
-                  <div class="product-img-placeholder">📦</div>
-                  <span class="product-name">${this.escapeHTML(item.name)}</span>
+                  ${getThumbnailMarkup(item)}
+                  <span class="product-name">${item.name}</span>
                 </div>
               </td>
-              <td>${this.escapeHTML(item.category)}</td>
-              <td>${this.escapeHTML(item.quantity)}</td>
-              <td>${this.escapeHTML(item.expiryDate)}</td>
+              <td>${item.category}</td>
+              <td><strong>${item.quantity}</strong></td>
+              <td><span style="font-family: var(--font-mono);">${item.expiryDate}</span></td>
               <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
-              <td>
-                <button class="btn btn-outline btn-sm action-view" data-id="${item.id}">View</button>
+              <td style="text-align: right;">
+                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}">View</button>
               </td>
             `;
             recentBody.appendChild(tr);
@@ -681,16 +855,23 @@
         }
       }
 
-      // Attach actions dynamic event listeners
+      // 4. ATTACH DYNAMIC ACTION LISTENERS
       document.querySelectorAll('.action-view').forEach(btn => {
-        btn.addEventListener('click', (e) => this.showProductDetails(e.currentTarget.dataset.id));
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          this.showProductDetails(btn.dataset.id);
+        };
       });
       document.querySelectorAll('.action-edit').forEach(btn => {
-        btn.addEventListener('click', (e) => this.setupEditMode(e.currentTarget.dataset.id));
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          this.setupEditMode(btn.dataset.id);
+        };
       });
       document.querySelectorAll('.action-shop').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const id = e.currentTarget.dataset.id;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
           const item = products.find(p => p.id === id);
           if (item && typeof ShoppingListModule !== 'undefined') {
             ShoppingListModule.addItem({
@@ -702,21 +883,83 @@
               source: 'manual',
               reason: 'manual'
             });
-            const originalText = e.currentTarget.innerHTML;
-            e.currentTarget.innerHTML = '✓ Added';
-            e.currentTarget.style.color = 'var(--primary)';
-            e.currentTarget.style.borderColor = 'var(--primary)';
+            const orig = btn.innerHTML;
+            btn.innerHTML = '✓ Added';
+            btn.style.color = 'var(--primary-forest)';
             setTimeout(() => {
-              e.currentTarget.innerHTML = originalText;
-              e.currentTarget.style.color = '';
-              e.currentTarget.style.borderColor = '';
+              btn.innerHTML = orig;
+              btn.style.color = '';
             }, 1200);
           }
-        });
+        };
       });
       document.querySelectorAll('.action-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => this.deleteProduct(e.currentTarget.dataset.id));
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          this.deleteProduct(btn.dataset.id);
+        };
       });
+    },
+
+    // Updates active sort indicators on table headers
+    updateSortGlyphs() {
+      const glyphs = {
+        name: document.getElementById('sortGlyphName'),
+        category: document.getElementById('sortGlyphCategory'),
+        quantity: document.getElementById('sortGlyphQuantity'),
+        expiryDate: document.getElementById('sortGlyphExpiry')
+      };
+
+      Object.keys(glyphs).forEach(field => {
+        const el = glyphs[field];
+        if (!el) return;
+        if (sortField === field) {
+          el.textContent = sortDirection === 'asc' ? ' ▲' : ' ▼';
+          el.style.color = 'var(--primary-forest)';
+        } else {
+          el.textContent = ' ▲▼';
+          el.style.color = 'var(--text-muted)';
+        }
+      });
+    },
+
+    // Sets view mode between 'table' and 'grid'
+    setViewMode(mode) {
+      this.currentViewMode = mode;
+      const tableWrapper = document.getElementById('productTableWrapper');
+      const gridWrapper = document.getElementById('productGridWrapper');
+      const tableBtn = document.getElementById('viewModeTableBtn');
+      const gridBtn = document.getElementById('viewModeGridBtn');
+
+      if (mode === 'grid') {
+        if (tableWrapper) tableWrapper.style.display = 'none';
+        if (gridWrapper) gridWrapper.style.display = 'grid';
+        if (tableBtn) tableBtn.classList.remove('active');
+        if (gridBtn) gridBtn.classList.add('active');
+      } else {
+        if (tableWrapper) tableWrapper.style.display = 'block';
+        if (gridWrapper) gridWrapper.style.display = 'none';
+        if (tableBtn) tableBtn.classList.add('active');
+        if (gridBtn) gridBtn.classList.remove('active');
+      }
+    },
+
+    // Opens the Slide-Over Drawer
+    openDrawer() {
+      const backdrop = document.getElementById('inventoryDrawerBackdrop');
+      if (backdrop) {
+        backdrop.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      }
+    },
+
+    // Closes the Slide-Over Drawer
+    closeDrawer() {
+      const backdrop = document.getElementById('inventoryDrawerBackdrop');
+      if (backdrop) {
+        backdrop.classList.remove('show');
+        document.body.style.overflow = '';
+      }
     },
 
     // Displays the modal details view
@@ -726,8 +969,10 @@
 
       const daysLeft = DashboardModule.getDaysRemaining(item.expiryDate);
       const statusInfo = DashboardModule.getItemStatus(item.expiryDate);
+      const imgUrl = resolveProductImage(item);
+      const monogram = item.name ? item.name.trim().slice(0, 2).toUpperCase() : 'SS';
 
-      let warrantyInfo = 'No warranty details';
+      let warrantyInfo = 'No warranty specified';
       if (item.warrantyDate) {
         const wDays = DashboardModule.getDaysRemaining(item.warrantyDate);
         warrantyInfo = `${item.warrantyDate} (${wDays >= 0 ? `${wDays} days remaining` : 'Expired'})`;
@@ -735,36 +980,62 @@
 
       const modalBody = document.getElementById('detailsModalBody');
       modalBody.innerHTML = `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div style="font-size: 48px; margin-bottom: 8px;">📦</div>
-          <h2>${item.name}</h2>
-          <span class="badge ${statusInfo.class}" style="margin-top: 8px; font-size: 14px; padding: 6px 14px;">${statusInfo.text}</span>
+        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-hairline);">
+          <div style="width: 64px; height: 64px; min-width: 64px; border-radius: var(--radius); background: var(--surface-subdued); border: 1px solid var(--border-hairline); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            ${imgUrl ? `<img src="${imgUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:20px;font-weight:700;">${monogram}</span>`}
+          </div>
+          <div>
+            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category}</span>
+            <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 2px 0 6px;">${item.name}</h2>
+            <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
+          </div>
         </div>
-        <table style="width: 100%; border-collapse: collapse;">
+
+        <table style="width: 100%; font-size: 12.5px;">
           <tr>
-            <td style="font-weight: 600; padding: 8px; width: 40%;">Category:</td>
-            <td style="padding: 8px;">${item.category}</td>
+            <td style="font-weight: 600; color: var(--text-secondary); width: 35%; padding: 8px 0;">Quantity:</td>
+            <td style="padding: 8px 0;"><strong>${item.quantity}</strong></td>
           </tr>
           <tr>
-            <td style="font-weight: 600; padding: 8px;">Quantity:</td>
-            <td style="padding: 8px;">${item.quantity}</td>
+            <td style="font-weight: 600; color: var(--text-secondary); padding: 8px 0;">Expiry Date:</td>
+            <td style="padding: 8px 0;"><span style="font-family: var(--font-mono);">${item.expiryDate} (${daysLeft < 0 ? 'Expired' : `${daysLeft} days left`})</span></td>
           </tr>
           <tr>
-            <td style="font-weight: 600; padding: 8px;">Expiry Date:</td>
-            <td style="padding: 8px;">${item.expiryDate} (${daysLeft < 0 ? 'Expired' : `${daysLeft} days remaining`})</td>
+            <td style="font-weight: 600; color: var(--text-secondary); padding: 8px 0;">Warranty End:</td>
+            <td style="padding: 8px 0;"><span style="font-family: var(--font-mono);">${warrantyInfo}</span></td>
           </tr>
           <tr>
-            <td style="font-weight: 600; padding: 8px;">Warranty Expiry:</td>
-            <td style="padding: 8px;">${warrantyInfo}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: 600; padding: 8px;">Description:</td>
-            <td style="padding: 8px;">${item.description || 'No description provided.'}</td>
+            <td style="font-weight: 600; color: var(--text-secondary); padding: 8px 0; vertical-align: top;">Notes:</td>
+            <td style="padding: 8px 0; color: var(--text-secondary);">${item.description || 'No description provided.'}</td>
           </tr>
         </table>
       `;
 
       document.getElementById('detailsModal').classList.add('show');
+    },
+
+    // Setup Add Mode
+    setupAddMode() {
+      currentEditId = null;
+      document.getElementById('productForm').reset();
+      const formEl = document.getElementById('productForm');
+      if (formEl) delete formEl.dataset.catalogProductId;
+      document.getElementById('formTitle').textContent = 'Add Product';
+      document.getElementById('submitBtnText').textContent = 'Save Product';
+      const suggestionMsg = document.getElementById('expirySuggestionMsg');
+      if (suggestionMsg) suggestionMsg.style.display = 'none';
+      const imgInput = document.getElementById('productImage');
+      const imgUrl = document.getElementById('productImageUrl');
+      const previewBox = document.getElementById('productImagePreview');
+      const statusEl = document.getElementById('productImageStatus');
+      if (imgInput) imgInput.value = '';
+      if (imgUrl) imgUrl.value = '';
+      if (previewBox) previewBox.style.display = 'none';
+      if (statusEl) statusEl.style.display = 'none';
+      document.querySelectorAll('#productForm .form-input').forEach(input => {
+        input.classList.remove('is-invalid');
+      });
+      this.openDrawer();
     },
 
     // Populate form fields for editing
@@ -775,7 +1046,6 @@
       currentEditId = id;
       document.getElementById('formTitle').textContent = 'Edit Product';
       document.getElementById('submitBtnText').textContent = 'Save Changes';
-      document.getElementById('cancelEditBtn').style.display = 'inline-flex';
 
       // Prefill fields
       document.getElementById('productName').value = item.name;
@@ -785,11 +1055,28 @@
       document.getElementById('productWarranty').value = item.warrantyDate || '';
       document.getElementById('productDesc').value = item.description || '';
 
+      const imgInput = document.getElementById('productImage');
+      const imgUrl = document.getElementById('productImageUrl');
+      const previewBox = document.getElementById('productImagePreview');
+      const previewImg = document.getElementById('productImagePreviewImg');
+      const fileNameSpan = document.getElementById('productImageFileName');
+      const statusEl = document.getElementById('productImageStatus');
+      if (imgInput) imgInput.value = '';
+      if (statusEl) statusEl.style.display = 'none';
+      if (item.imageUrl) {
+        if (imgUrl) imgUrl.value = item.imageUrl;
+        if (previewImg) previewImg.src = resolveProductImage(item) || item.imageUrl;
+        if (fileNameSpan) fileNameSpan.textContent = item.imageUrl.split('/').pop() || 'Current Photo';
+        if (previewBox) previewBox.style.display = 'flex';
+      } else {
+        if (imgUrl) imgUrl.value = '';
+        if (previewBox) previewBox.style.display = 'none';
+      }
+
       const suggestionMsg = document.getElementById('expirySuggestionMsg');
       if (suggestionMsg) suggestionMsg.style.display = 'none';
 
-      // Auto scroll or jump to input view
-      document.getElementById('inventoryFormSection').scrollIntoView({ behavior: 'smooth' });
+      this.openDrawer();
     },
 
     // Cancel edit mode
@@ -798,16 +1085,23 @@
       document.getElementById('productForm').reset();
       const formEl = document.getElementById('productForm');
       if (formEl) delete formEl.dataset.catalogProductId;
-      document.getElementById('formTitle').textContent = 'Add Household Product';
-      document.getElementById('submitBtnText').textContent = 'Add Product';
-      document.getElementById('cancelEditBtn').style.display = 'none';
+      document.getElementById('formTitle').textContent = 'Add Product';
+      document.getElementById('submitBtnText').textContent = 'Save Product';
       const suggestionMsg = document.getElementById('expirySuggestionMsg');
       if (suggestionMsg) suggestionMsg.style.display = 'none';
+      const imgInput = document.getElementById('productImage');
+      const imgUrl = document.getElementById('productImageUrl');
+      const previewBox = document.getElementById('productImagePreview');
+      const statusEl = document.getElementById('productImageStatus');
+      if (imgInput) imgInput.value = '';
+      if (imgUrl) imgUrl.value = '';
+      if (previewBox) previewBox.style.display = 'none';
+      if (statusEl) statusEl.style.display = 'none';
       
-      // Clear validation states
       document.querySelectorAll('#productForm .form-input').forEach(input => {
         input.classList.remove('is-invalid');
       });
+      this.closeDrawer();
     },
 
     // Delete item handler
@@ -815,7 +1109,7 @@
       const item = products.find(p => p.id === id);
       if (!item || item.userId !== AuthModule.currentUser.id) return;
 
-      if (confirm('Are you sure you want to delete this product?')) {
+      showConfirm('Delete Product?', `Are you sure you want to delete "${item.name}" from your shelf?`, () => {
         products = products.filter(p => p.id !== id);
         StorageModule.saveProducts(products);
         DashboardModule.updateDashboardMetrics(products);
@@ -823,13 +1117,117 @@
           ShoppingListModule.syncShoppingList(products);
         }
         this.renderProductTable(products);
-      }
+        showNotification('Product deleted from inventory.', 'success');
+      }, 'Delete');
     }
   };
+
+  // Wire Drawer and View Mode Switchers
+  const openAddBtn = document.getElementById('openAddDrawerBtn');
+  if (openAddBtn) {
+    openAddBtn.addEventListener('click', () => InventoryModule.setupAddMode());
+  }
+
+  const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+  if (closeDrawerBtn) {
+    closeDrawerBtn.addEventListener('click', () => InventoryModule.closeDrawer());
+  }
+
+  const drawerBackdrop = document.getElementById('inventoryDrawerBackdrop');
+  if (drawerBackdrop) {
+    drawerBackdrop.addEventListener('click', (e) => {
+      if (e.target === drawerBackdrop) InventoryModule.closeDrawer();
+    });
+  }
+
+  const viewModeTableBtn = document.getElementById('viewModeTableBtn');
+  if (viewModeTableBtn) {
+    viewModeTableBtn.addEventListener('click', () => InventoryModule.setViewMode('table'));
+  }
+
+  const viewModeGridBtn = document.getElementById('viewModeGridBtn');
+  if (viewModeGridBtn) {
+    viewModeGridBtn.addEventListener('click', () => InventoryModule.setViewMode('grid'));
+  }
+
+  // Handle Multer image upload
+  const productImageInput = document.getElementById('productImage');
+  if (productImageInput) {
+    productImageInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowed.includes(file.type)) {
+        showNotification('Only JPEG, PNG or WebP images are allowed.', 'error');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Photo must be 5MB or smaller.', 'error');
+        e.target.value = '';
+        return;
+      }
+      const token = localStorage.getItem('safeshelf_auth_token');
+      if (!token) {
+        showNotification('Sign in before uploading product photos.', 'warning');
+        return;
+      }
+      const statusEl = document.getElementById('productImageStatus');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Uploading photo…';
+      }
+      const formData = new FormData();
+      formData.append('image', file);
+      try {
+        const response = await fetch('/api/uploads/image', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Upload failed.');
+        const imgUrl = document.getElementById('productImageUrl');
+        if (imgUrl) imgUrl.value = data.url;
+        const previewBox = document.getElementById('productImagePreview');
+        const previewImg = document.getElementById('productImagePreviewImg');
+        const nameSpan = document.getElementById('productImageFileName');
+        if (previewImg) previewImg.src = data.url;
+        if (nameSpan) nameSpan.textContent = file.name;
+        if (previewBox) previewBox.style.display = 'flex';
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.textContent = '✓ Photo uploaded';
+        }
+        showNotification('Photo uploaded successfully.', 'success');
+      } catch (err) {
+        if (statusEl) statusEl.style.display = 'none';
+        showNotification(err.message || 'Image upload failed.', 'error');
+        e.target.value = '';
+      }
+    });
+  }
+
+  const removePhotoBtn = document.getElementById('removeProductImageBtn');
+  if (removePhotoBtn) {
+    removePhotoBtn.addEventListener('click', () => {
+      const imgInput = document.getElementById('productImage');
+      const imgUrl = document.getElementById('productImageUrl');
+      const previewBox = document.getElementById('productImagePreview');
+      const statusEl = document.getElementById('productImageStatus');
+      if (imgInput) imgInput.value = '';
+      if (imgUrl) imgUrl.value = '';
+      if (previewBox) previewBox.style.display = 'none';
+      if (statusEl) statusEl.style.display = 'none';
+      showNotification('Photo removed.', 'info');
+    });
+  }
 
   // Handle product form submission
   document.getElementById('productForm').addEventListener('submit', (e) => {
     e.preventDefault();
+
+    const customImageUrl = (document.getElementById('productImageUrl') ? document.getElementById('productImageUrl').value : '').trim();
 
     const formData = {
       name: document.getElementById('productName').value.trim(),
@@ -837,7 +1235,8 @@
       quantity: document.getElementById('productQuantity').value.trim(),
       expiryDate: document.getElementById('productExpiry').value,
       warrantyDate: document.getElementById('productWarranty').value,
-      description: document.getElementById('productDesc').value.trim()
+      description: document.getElementById('productDesc').value,
+      imageUrl: customImageUrl
     };
 
     // Trigger validation
@@ -845,16 +1244,10 @@
       return;
     }
 
-    if (formData.warrantyDate && formData.expiryDate && formData.warrantyDate < formData.expiryDate) {
-      StorageModule.setError('productWarranty', 'Warranty end cannot be before the expiry date.');
-      return;
-    }
-
     if (currentEditId) {
       // Edit Mode
       products = products.map(item => {
         if (item.id === currentEditId) {
-          // Merge formData into existing item to preserve id, userId, and hidden fields
           return { ...item, ...formData };
         }
         return item;
@@ -874,7 +1267,7 @@
       }
       products.push(newProduct);
 
-      // SESSION STORAGE: track how many products were added during this browser tab session
+      // SESSION STORAGE: track item added in tab session
       if (typeof SessionModule !== 'undefined') {
         SessionModule.trackItemAdded();
       }
@@ -888,21 +1281,15 @@
     }
     InventoryModule.renderProductTable(products);
     
-    // Show success message
-    const successMsg = document.getElementById('formSuccessMessage');
-    if (successMsg) {
-      successMsg.textContent = 'Product saved successfully.';
-      successMsg.style.display = 'block';
-      setTimeout(() => {
-        successMsg.style.display = 'none';
-      }, 3000);
-    }
-
+    showNotification('Product saved to your shelf.', 'success');
     InventoryModule.cancelEdit();
   });
 
   // Attach cancel edit listener
-  document.getElementById('cancelEditBtn').addEventListener('click', () => {
-    InventoryModule.cancelEdit();
-  });
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      InventoryModule.cancelEdit();
+    });
+  }
 

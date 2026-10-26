@@ -1,0 +1,46 @@
+[
+  {
+    "id": 8,
+    "name": "Black Pepper",
+    "price": 90,
+    "currency": "INR",
+    "price_unit": "100 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/008-black-pepper.jpeg",
+    "description": "Bold, aromatic black pepper that adds a warm kick to curries, soups, marinades, and table seasoning.",
+    "category": "Masala, Oil & More"
+  },
+  {
+    "id": 43,
+    "name": "Desi Ghee",
+    "price": 300,
+    "currency": "INR",
+    "price_unit": "500 ml jar",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/043-ghee.jpeg",
+    "description": "Rich, aromatic ghee for tadka, parathas, sweets, and traditional home cooking.",
+    "category": "Masala, Oil & More"
+  },
+  {
+    "id": 71,
+    "name": "Olive Oil",
+    "price": 450,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/071-oliveoil.jpeg",
+    "description": "A versatile olive oil for dressings, sautéing, and finishing dishes. Check the label for the oil grade and cooking guidance.",
+    "category": "Masala, Oil & More"
+  },
+  {
+    "id": 83,
+    "name": "Pink Salt",
+    "price": 80,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/083-pinksalt.jpeg",
+    "description": "A pantry seasoning with a distinctive pink hue for everyday cooking and table seasoning.",
+    "category": "Masala, Oil & More"
+  }
+]

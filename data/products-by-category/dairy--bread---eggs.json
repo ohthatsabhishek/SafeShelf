@@ -1,0 +1,134 @@
+[
+  {
+    "id": 16,
+    "name": "Butter",
+    "price": 60,
+    "currency": "INR",
+    "price_unit": "100 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/016-butter.jpeg",
+    "description": "Creamy, rich butter for toast, parathas, baking, and adding a smooth finish to favourite dishes.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 17,
+    "name": "Buttermilk",
+    "price": 25,
+    "currency": "INR",
+    "price_unit": "200 ml pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/017-buttermilk.jpeg",
+    "description": "A cool, savoury buttermilk drink that pairs beautifully with lunch and helps refresh your day.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 23,
+    "name": "Cheese",
+    "price": 125,
+    "currency": "INR",
+    "price_unit": "200 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/023-cheese.jpeg",
+    "description": "Smooth, creamy cheese slices for sandwiches, burgers, toasties, and quick cheesy snacks.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 30,
+    "name": "Cheese Slices",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "200 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/030-cottagecheese.jpeg",
+    "description": "Mild, creamy cheese slices that melt neatly into burgers, grilled sandwiches, and quick snacks.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 26,
+    "name": "Condensed Milk",
+    "price": 75,
+    "currency": "INR",
+    "price_unit": "200 g tin",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/026-condensedmilk.jpeg",
+    "description": "Thick, sweet condensed milk for kheer, cakes, coffee, and quick homemade desserts.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 33,
+    "name": "Dahi",
+    "price": 40,
+    "currency": "INR",
+    "price_unit": "400 g tub",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/033-curd.jpeg",
+    "description": "Creamy everyday dahi that works beautifully with parathas, rice, raita, and homemade marinades.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 39,
+    "name": "Flavoured Yogurt",
+    "price": 35,
+    "currency": "INR",
+    "price_unit": "100 g cup",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/039-flavouredyogurt.jpeg",
+    "description": "A smooth, fruity yoghurt cup for a quick chilled snack or a sweet little treat.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 31,
+    "name": "Fresh Cream",
+    "price": 65,
+    "currency": "INR",
+    "price_unit": "200 ml pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/031-cream.jpeg",
+    "description": "Smooth cooking cream for pasta, soups, gravies, and rich homemade desserts.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 47,
+    "name": "Greek Yogurt",
+    "price": 60,
+    "currency": "INR",
+    "price_unit": "100 g cup",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/047-greek-yogurt.jpeg",
+    "description": "Thick, creamy Greek-style yoghurt for breakfast bowls, dips, smoothies, and savoury toppings.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 58,
+    "name": "Lassi",
+    "price": 30,
+    "currency": "INR",
+    "price_unit": "200 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/058-lassi.jpeg",
+    "description": "A chilled, creamy lassi for a refreshing break alongside lunch or a spicy meal.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 65,
+    "name": "Milk",
+    "price": 34,
+    "currency": "INR",
+    "price_unit": "500 ml pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/065-milk.jpeg",
+    "description": "Everyday milk for chai, coffee, cereal, and homemade favourites. Store chilled and check the pack date.",
+    "category": "Dairy, Bread & Eggs"
+  },
+  {
+    "id": 74,
+    "name": "Paneer",
+    "price": 100,
+    "currency": "INR",
+    "price_unit": "200 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/074-paneer.jpeg",
+    "description": "Soft, fresh paneer for paneer bhurji, tikka, curries, and quick protein-packed meals.",
+    "category": "Dairy, Bread & Eggs"
+  }
+]

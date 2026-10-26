@@ -1,0 +1,200 @@
+[
+  {
+    "id": 3,
+    "name": "Barley",
+    "price": 90,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/003-barley.jpeg",
+    "description": "Wholesome barley with a hearty texture—great for soups, porridge, and everyday home cooking.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 6,
+    "name": "Besan",
+    "price": 90,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/006-besan.jpeg",
+    "description": "Fine gram flour for pakoras, chillas, kadhi, and all your favourite homemade snacks.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 15,
+    "name": "Brown Rice",
+    "price": 100,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/015-brownrice.jpeg",
+    "description": "Nutty brown rice with a pleasantly chewy texture, suited to wholesome bowls and everyday meals.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 22,
+    "name": "Chana Dal",
+    "price": 95,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/022-chanadal.jpeg",
+    "description": "Everyday chana dal with a hearty texture—ideal for dal tadka, curries, and savoury snacks.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 24,
+    "name": "Chickpeas",
+    "price": 90,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/024-chickpea.jpeg",
+    "description": "Versatile chickpeas for chole, salads, hummus-style dips, and protein-rich home cooking.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 29,
+    "name": "Corn Flour",
+    "price": 45,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/029-cornflour.jpeg",
+    "description": "A fine pantry staple for thickening gravies, coating crispy snacks, and preparing sauces.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 62,
+    "name": "Maida",
+    "price": 45,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/062-maida.jpeg",
+    "description": "Fine all-purpose flour for baking, naan, bhature, biscuits, and a range of homemade treats.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 64,
+    "name": "Masoor Dal",
+    "price": 95,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/064-masoordal.jpeg",
+    "description": "Everyday masoor dal that cooks into a comforting, flavourful meal for lunch or dinner.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 66,
+    "name": "Millets",
+    "price": 100,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/066-millets.jpeg",
+    "description": "A versatile millet pantry staple for porridge, khichdi, dosa batter, and wholesome everyday meals.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 68,
+    "name": "Moong Dal",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/068-moongdal.jpeg",
+    "description": "Light, versatile moong dal for khichdi, dal, cheela, and comforting home-style meals.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 84,
+    "name": "Poha",
+    "price": 60,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/084-poha.jpeg",
+    "description": "Light flattened rice for a quick poha breakfast with peanuts, curry leaves, and a squeeze of lemon.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 87,
+    "name": "Quinoa",
+    "price": 180,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/087-quinoa.jpeg",
+    "description": "A versatile quinoa grain for salad bowls, pilaf, and a change-up to your usual lunch routine.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 89,
+    "name": "Rajma",
+    "price": 140,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/089-rajma.jpeg",
+    "description": "Kidney beans that cook into a hearty rajma curry—perfect with steamed rice for a comforting meal.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 90,
+    "name": "Rice",
+    "price": 70,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/090-rice.jpeg",
+    "description": "A versatile everyday rice for dal-chawal, pulao, khichdi, and family meals.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 98,
+    "name": "Soya Beans",
+    "price": 80,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/098-soyabean.jpeg",
+    "description": "A versatile soya pantry staple for curries, pulao, and a range of everyday vegetarian dishes.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 102,
+    "name": "Suji",
+    "price": 55,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/102-suji.jpeg",
+    "description": "Fine semolina for upma, halwa, idli, and quick homemade snacks.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 110,
+    "name": "Urad Dal",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/110-uraddal.jpeg",
+    "description": "Urad dal for dal makhani, idli and dosa batter, and other classic Indian recipes.",
+    "category": "Atta, Rice & Dal"
+  },
+  {
+    "id": 112,
+    "name": "Wheat Flour",
+    "price": 55,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/112-wheat-flour.jpeg",
+    "description": "Everyday wheat flour for soft rotis, chapatis, parathas, and home-style baking.",
+    "category": "Atta, Rice & Dal"
+  }
+]

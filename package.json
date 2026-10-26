@@ -1,0 +1,30 @@
+{
+  "name": "safeshelf-v1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SafeShelf household inventory app with Express, MongoDB, Multer and vanilla JS frontend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "import:products": "node scripts/import-products.js",
+    "seed:demo": "node scripts/seed-demo.js",
+    "test:browser": "node scripts/qa-browser-tests.js",
+    "demo:live": "node scripts/live-demo.js",
+    "check": "node --check server.js && node --check server/routes/auth.js && node --check server/routes/products.js && node --check server/routes/uploads.js && node --check server/routes/userData.js && node --check server/routes/shoppingImport.js && node --check scripts/import-products.js && node --check scripts/seed-demo.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "playwright": "^1.64.1"
+  }
+}

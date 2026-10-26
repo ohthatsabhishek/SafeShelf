@@ -1,0 +1,24 @@
+[
+  {
+    "id": 55,
+    "name": "Honey",
+    "price": 180,
+    "currency": "INR",
+    "price_unit": "250 g jar",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/055-honey.jpeg",
+    "description": "Golden, sweet honey for toast, tea, breakfast bowls, and homemade dressings. Check the label for product details.",
+    "category": "Breakfast & Spreads"
+  },
+  {
+    "id": 91,
+    "name": "Rolled Oats",
+    "price": 160,
+    "currency": "INR",
+    "price_unit": "500 g pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/091-rolledoats.jpeg",
+    "description": "Rolled oats for warm porridge, overnight oats, smoothies, and quick breakfast bowls.",
+    "category": "Breakfast & Spreads"
+  }
+]

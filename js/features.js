@@ -1,7 +1,7 @@
 /**
  * SAFESHELF — features.js
  * ------------------------------------------------------------
- * Smart Features — REST API Integration & Shopping List
+ * MEMBER 3 MODULE: Smart Features — REST API Integration & Shopping List
  * ------------------------------------------------------------
  * Contains:
  *   - WebApiModule      -> fetch() + async/await REST API consumption
@@ -17,16 +17,6 @@
 
   const WebApiModule = {
     selectedCategory: 'All',
-
-    escapeHTML(value) {
-      return String(value ?? '').replace(/[&<>'"]/g, character => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[character]));
-    },
 
     // Safe Category Mapper: Maps API categories to SafeShelf categories
     // Rule: Generic API products are NEVER mapped to 'Medicine' for consumer safety.
@@ -86,7 +76,6 @@
       const resultsContainer = document.getElementById('apiResultsList');
       const loader = document.getElementById('apiLoader');
       const manualPrompt = document.getElementById('apiManualPrompt');
-      const status = document.getElementById('apiStatus');
       
       if (!resultsContainer) return;
 
@@ -97,16 +86,15 @@
 
       if (loader) loader.style.display = 'block';
       if (manualPrompt) manualPrompt.style.display = 'none';
-      if (status) status.textContent = 'Searching the public product database...';
       resultsContainer.innerHTML = '';
 
       let results = [];
-      let usedFallback = false;
 
       try {
-        const searchUrl = query && query.trim() !== '' 
-          ? `https://dummyjson.com/products/search?q=${encodeURIComponent(query.trim())}&limit=8`
-          : `https://dummyjson.com/products?limit=8`;
+        let searchUrl = `/api/products?q=${encodeURIComponent(query ? query.trim() : '')}`;
+        if (category && category !== 'All') {
+          searchUrl += `&category=${encodeURIComponent(category)}`;
+        }
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
@@ -123,46 +111,38 @@
             const mappedCatName = this.mapApiCategory(p.category);
             const catObj = CatalogStore.getCategoryById(mappedCatName);
             return {
-              id: 'api_' + p.id,
-              name: p.title,
+              id: p.id,
+              name: p.name,
               brand: p.brand || 'Generic',
-              categoryId: catObj ? catObj.id : 'other',
+              categoryId: catObj ? catObj.id : (p.category ? p.category.toLowerCase().replace(/[^a-z0-9]/g, '') : 'other'),
               categoryName: mappedCatName,
-              defaultQuantity: this.getDefaultQuantityForCategory(mappedCatName),
+              defaultQuantity: p.priceUnit || this.getDefaultQuantityForCategory(mappedCatName),
               suggestedShelfLifeDays: 30,
               description: p.description || '',
-              image: p.thumbnail || '',
-              tags: p.tags || [],
-              source: 'API'
+              image: p.image || '',
+              tags: [],
+              source: p.source === 'api' ? 'API' : 'Catalog'
             };
           });
-
-          if (category && category !== 'All') {
-            results = results.filter(p => p.categoryName === category);
-          }
         }
       } catch (err) {
-        console.warn('DummyJSON API unavailable or timed out. Using local fallback catalog.', err.message);
-        usedFallback = true;
+        console.warn('SafeShelf server products API unavailable. Using local fallback catalog.', err.message);
       }
 
-      // If API yielded no results or failed, activate CatalogStore search
-      if (results.length === 0) {
-        results = CatalogStore.searchProducts(query, category);
-        usedFallback = true;
-      }
+      // Dataset-first merge: local products remain available even when the API works.
+      // Normalize names and compare brand where possible to prevent cross-source duplicates.
+      const localResults = CatalogStore.searchProducts(query, category).map(p => ({ ...p, source: 'Catalog' }));
+      const keyFor = p => String(p.name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      const localKeys = new Set(localResults.map(keyFor));
+      const uniqueApiResults = results.filter(p => !localKeys.has(keyFor(p)));
+      results = [...localResults, ...uniqueApiResults];
 
       if (loader) loader.style.display = 'none';
-      if (status) {
-        status.textContent = usedFallback
-          ? 'Showing SafeShelf catalog suggestions while the public API is unavailable or has no match.'
-          : `Showing ${results.length} product suggestion${results.length === 1 ? '' : 's'}.`;
-      }
 
       // Render results
       if (results.length === 0) {
         resultsContainer.innerHTML = `
-          <li class="api-empty-state">
+          <li style="padding: 16px; font-size: 13px; color: var(--text-muted); text-align: center;">
             No matching products found.
           </li>
         `;
@@ -189,20 +169,18 @@
 
         const sourceClass = item.source === 'API' ? 'source-api' : 'source-catalog';
         const sourceLabel = item.source === 'API' ? 'Public API' : 'SafeShelf Catalog';
-        const safeName = this.escapeHTML(item.name);
-        const safeCategory = this.escapeHTML(item.categoryName);
-        const safeImage = this.escapeHTML(item.image);
-        const iconOrThumb = item.image 
-          ? `<img src="${safeImage}" alt="${safeName}" onerror="this.style.display='none'">`
+        const safeImage = item.image ? String(item.image).replace(/"/g, '&quot;') : '';
+        const iconOrThumb = safeImage
+          ? `<img src="${safeImage}" alt="${String(item.name || 'Product').replace(/"/g, '&quot;')}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.textContent='📦';">`
           : '📦';
 
         li.innerHTML = `
           <div class="picker-card-left">
             <div class="picker-thumb">${iconOrThumb}</div>
             <div class="picker-info">
-              <div class="picker-title">${safeName}</div>
+              <div class="picker-title">${item.name}</div>
               <div class="picker-meta">
-                <span class="badge badge-safe" style="font-size: 10px; padding: 2px 6px;">${safeCategory}</span>
+                <span class="badge badge-safe" style="font-size: 10px; padding: 2px 6px;">${item.categoryName}</span>
                 <span class="picker-source-tag ${sourceClass}">${sourceLabel}</span>
               </div>
             </div>
@@ -240,29 +218,24 @@
       const defaultQty = product.defaultQuantity || '1 unit';
       const suggestedDays = product.suggestedShelfLifeDays || 30;
       const shelfLifeText = `~${suggestedDays}d suggested`;
-      const safeName = this.escapeHTML(product.name);
-      const safeCategory = this.escapeHTML(product.categoryName);
-      const safeBrand = this.escapeHTML(brand);
-      const safeQuantity = this.escapeHTML(defaultQty);
-      const safeDescription = this.escapeHTML(product.description || 'No description available.');
 
       modalBody.innerHTML = `
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="font-size: 48px; margin-bottom: 8px;">📦</div>
-          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark);">${safeName}</h2>
+          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark);">${product.name}</h2>
           <div style="display: flex; justify-content: center; gap: 8px; align-items: center; margin-top: 8px;">
             <span class="badge" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px; ${badgeStyle}">${sourceLabel}</span>
-            <span class="badge badge-safe" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px;">${safeCategory}</span>
+            <span class="badge badge-safe" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px;">${product.categoryName}</span>
           </div>
         </div>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; width: 40%; color: var(--text-dark);">Brand / Manufacturer:</td>
-            <td style="padding: 10px 8px; color: var(--text-dark);">${safeBrand}</td>
+            <td style="padding: 10px 8px; color: var(--text-dark);">${brand}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; color: var(--text-dark);">Quantity Suggestion:</td>
-            <td style="padding: 10px 8px; color: var(--text-dark);">${safeQuantity}</td>
+            <td style="padding: 10px 8px; color: var(--text-dark);">${defaultQty}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; color: var(--text-dark);">Shelf Life / Suggestion:</td>
@@ -270,7 +243,7 @@
           </tr>
           <tr>
             <td style="font-weight: 600; padding: 10px 8px; vertical-align: top; color: var(--text-dark);">Description:</td>
-            <td style="padding: 10px 8px; color: var(--text-muted); line-height: 1.4;">${safeDescription}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted); line-height: 1.4;">${product.description || 'No description available.'}</td>
           </tr>
         </table>
         <div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -416,6 +389,7 @@
 
   const ShoppingListModule = {
     LOW_STOCK_THRESHOLD: 1,
+    SUPPRESSED_KEY: 'safeshelf_shopping_suppressed',
     currentFilter: 'all', // 'all' | 'pending' | 'purchased'
 
     init() {
@@ -429,6 +403,106 @@
 
     saveShoppingList(items) {
       StorageModule.saveShoppingList(AuthModule.currentUser ? AuthModule.currentUser.id : null, items);
+    },
+
+    getSuppressedProductIds() {
+      if (!AuthModule.currentUser) return [];
+      try {
+        const all = JSON.parse(localStorage.getItem(this.SUPPRESSED_KEY) || '{}');
+        return Array.isArray(all[AuthModule.currentUser.id]) ? all[AuthModule.currentUser.id] : [];
+      } catch (e) { return []; }
+    },
+
+    saveSuppressedProductIds(ids) {
+      if (!AuthModule.currentUser) return;
+      try {
+        const all = JSON.parse(localStorage.getItem(this.SUPPRESSED_KEY) || '{}');
+        all[AuthModule.currentUser.id] = [...new Set(ids)];
+        localStorage.setItem(this.SUPPRESSED_KEY, JSON.stringify(all));
+      } catch (e) { console.warn('Could not save shopping suppression state', e); }
+    },
+
+    // Builds one auto-generated shopping list entry for a low/out-of-stock product.
+    buildAutoItem(product, reason) {
+      return {
+        id: product.id,
+        productId: product.id,
+        name: product.name,
+        category: product.category,
+        quantity: product.quantity,
+        source: 'auto',
+        reason: reason,
+        purchased: false,
+        addedAt: new Date().toISOString()
+      };
+    },
+
+    // Goes through the inventory and works out which auto items should
+    // exist (added, updated, or removed) based on current stock levels.
+    // Manual items are never touched here - only auto-generated ones.
+    updateAutoItemsFromInventory(productsList, autoItems, manualItems, suppressedIds = []) {
+      const suppressed = new Set(suppressedIds);
+      for (let i = 0; i < productsList.length; i++) {
+        const product = productsList[i];
+        const isOut = StorageModule.isOutOfStock(product.quantity);
+        const isLow = StorageModule.isLowStock(product.quantity, this.LOW_STOCK_THRESHOLD);
+
+        const existingAutoIndex = autoItems.findIndex(item => item.productId === product.id);
+        const alreadyOnManualList = manualItems.some(item => item.productId === product.id);
+
+        if (!isOut && !isLow) {
+          suppressed.delete(product.id);
+          if (existingAutoIndex !== -1) autoItems.splice(existingAutoIndex, 1);
+          continue;
+        }
+
+        if (isOut || isLow) {
+          if (suppressed.has(product.id)) {
+            if (existingAutoIndex !== -1) autoItems.splice(existingAutoIndex, 1);
+            continue;
+          }
+          const reason = isOut ? 'out_of_stock' : 'low_stock';
+
+          if (existingAutoIndex !== -1) {
+            // Already on the auto list: just refresh its details and reason,
+            // keeping its purchased state as it was.
+            autoItems[existingAutoIndex].name = product.name;
+            autoItems[existingAutoIndex].category = product.category;
+            autoItems[existingAutoIndex].quantity = product.quantity;
+            autoItems[existingAutoIndex].reason = reason;
+          } else if (!alreadyOnManualList) {
+            // Not on either list yet, so add a new auto entry.
+            autoItems.push(this.buildAutoItem(product, reason));
+          }
+        } else if (existingAutoIndex !== -1) {
+          // Stock is fine again: remove the old auto entry.
+          autoItems.splice(existingAutoIndex, 1);
+        }
+      }
+
+      this.saveSuppressedProductIds([...suppressed]);
+      return autoItems;
+    },
+
+    // Combines manual items and auto items into one list, making sure the
+    // same product never appears twice (manual entries win if there's a clash).
+    mergeShoppingItems(manualItems, autoItems) {
+      const merged = [];
+      const seenProductIds = new Set();
+
+      manualItems.forEach(item => {
+        if (item.productId) seenProductIds.add(item.productId);
+        merged.push(item);
+      });
+
+      autoItems.forEach(item => {
+        if (!seenProductIds.has(item.productId)) {
+          seenProductIds.add(item.productId);
+          merged.push(item);
+        }
+      });
+
+      return merged;
     },
 
     // Synchronizes inventory items into the user's shopping list
@@ -446,137 +520,24 @@
       // Remove auto-generated items whose inventory products were deleted
       autoItems = autoItems.filter(item => inventoryProductIds.has(item.productId));
 
-      // Detect out-of-stock and low-stock items from inventory
-      productsList.forEach(p => {
-        const isOut = StorageModule.isOutOfStock(p.quantity);
-        const isLow = StorageModule.isLowStock(p.quantity, this.LOW_STOCK_THRESHOLD);
-        
-        const existingAutoIndex = autoItems.findIndex(item => item.productId === p.id);
-        const existingManual = manualItems.find(item => item.productId === p.id);
-
-        if (isOut) {
-          if (existingAutoIndex !== -1) {
-            // Update stock reason & details while preserving purchased state
-            autoItems[existingAutoIndex].name = p.name;
-            autoItems[existingAutoIndex].category = p.category;
-            autoItems[existingAutoIndex].quantity = p.quantity;
-            autoItems[existingAutoIndex].reason = 'out_of_stock';
-          } else if (!existingManual) {
-            autoItems.push({
-              id: p.id,
-              productId: p.id,
-              name: p.name,
-              category: p.category,
-              quantity: p.quantity,
-              source: 'auto',
-              reason: 'out_of_stock',
-              purchased: false,
-              addedAt: new Date().toISOString()
-            });
-          }
-        } else if (isLow) {
-          if (existingAutoIndex !== -1) {
-            // Update stock reason & details while preserving purchased state
-            autoItems[existingAutoIndex].name = p.name;
-            autoItems[existingAutoIndex].category = p.category;
-            autoItems[existingAutoIndex].quantity = p.quantity;
-            autoItems[existingAutoIndex].reason = 'low_stock';
-          } else if (!existingManual) {
-            autoItems.push({
-              id: p.id,
-              productId: p.id,
-              name: p.name,
-              category: p.category,
-              quantity: p.quantity,
-              source: 'auto',
-              reason: 'low_stock',
-              purchased: false,
-              addedAt: new Date().toISOString()
-            });
-          }
-        } else {
-          // Quantity is > LOW_STOCK_THRESHOLD: Remove auto item, but strictly preserve manual item
-          if (existingAutoIndex !== -1) {
-            autoItems.splice(existingAutoIndex, 1);
-          }
-        }
-      });
+      // Add/update/remove auto items based on stock. Suppressed products remain
+      // hidden until their stock rises above the low-stock threshold.
+      autoItems = this.updateAutoItemsFromInventory(productsList, autoItems, manualItems, this.getSuppressedProductIds());
 
       // Merge manual and auto items with strict duplicate prevention
-      const merged = [];
-      const seenProductIds = new Set();
-
-      // Manual entries take precedence
-      manualItems.forEach(item => {
-        if (item.productId) seenProductIds.add(item.productId);
-        merged.push(item);
-      });
-
-      autoItems.forEach(item => {
-        if (!seenProductIds.has(item.productId)) {
-          seenProductIds.add(item.productId);
-          merged.push(item);
-        }
-      });
+      const merged = this.mergeShoppingItems(manualItems, autoItems);
 
       this.saveShoppingList(merged);
       this.renderShoppingList();
     },
 
-    // SafeShelf in-app toast feedback notification
-    showToast(message, type = 'success') {
-      let toastContainer = document.getElementById('safeShelfToastContainer');
-      if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'safeShelfToastContainer';
-        toastContainer.style.position = 'fixed';
-        toastContainer.style.bottom = '24px';
-        toastContainer.style.right = '24px';
-        toastContainer.style.zIndex = '99999';
-        toastContainer.style.display = 'flex';
-        toastContainer.style.flexDirection = 'column';
-        toastContainer.style.gap = '8px';
-        toastContainer.style.pointerEvents = 'none';
-        document.body.appendChild(toastContainer);
-      }
-
-      const toast = document.createElement('div');
-      toast.className = 'safeshelf-toast';
-      toast.style.background = type === 'info' ? '#1E293B' : (type === 'warning' ? '#D97706' : '#1F6F54');
-      toast.style.color = '#FFFFFF';
-      toast.style.padding = '12px 18px';
-      toast.style.borderRadius = '8px';
-      toast.style.fontSize = '13px';
-      toast.style.fontWeight = '500';
-      toast.style.boxShadow = '0 10px 25px -5px rgba(0,0,0,0.2)';
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
-      toast.style.transition = 'all 0.25s ease';
-      toast.style.pointerEvents = 'auto';
-      toast.textContent = message;
-
-      toastContainer.appendChild(toast);
-      requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0)';
-      });
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        setTimeout(() => { toast.remove(); }, 300);
-      }, 2500);
-    },
-
     // Manually adds a product or custom item to shopping list
     addItem(itemData) {
       if (!AuthModule.currentUser) return { success: false, message: 'Not logged in' };
-      const itemName = String(itemData.name || '').trim();
-      if (!itemName) return { success: false, message: 'Item name is required' };
       const list = this.getShoppingList();
       const existingIndex = list.findIndex(item => 
         (itemData.productId && item.productId === itemData.productId) || 
-        item.name.toLowerCase().trim() === itemName.toLowerCase()
+        item.name.toLowerCase().trim() === itemData.name.toLowerCase().trim()
       );
 
       let isDuplicate = false;
@@ -586,12 +547,12 @@
         list[existingIndex].reason = 'manual';
         if (itemData.quantity) list[existingIndex].quantity = itemData.quantity;
         if (itemData.category) list[existingIndex].category = itemData.category;
-        this.showToast(`ℹ️ "${itemName}" is already in your shopping list.`, 'info');
+        showNotification(`ℹ️ "${itemData.name}" is already in your shopping list.`, 'info');
       } else {
         list.unshift({
           id: itemData.id || 'shop_' + Date.now(),
           productId: itemData.productId || null,
-          name: itemName,
+          name: itemData.name.trim(),
           category: itemData.category || 'Other',
           quantity: itemData.quantity || '1 unit',
           source: 'manual',
@@ -599,7 +560,7 @@
           purchased: false,
           addedAt: new Date().toISOString()
         });
-        this.showToast(`✓ "${itemName}" added to shopping list.`, 'success');
+        showNotification(`✓ "${itemData.name}" added to shopping list.`, 'success');
       }
 
       this.saveShoppingList(list);
@@ -626,7 +587,7 @@
       this.saveShoppingList(list);
       this.renderShoppingList();
       if (target) {
-        this.showToast(`Removed "${target.name}" from shopping list.`, 'info');
+        showNotification(`Removed "${target.name}" from shopping list.`, 'info');
       }
     },
 
@@ -635,16 +596,20 @@
       let list = this.getShoppingList();
       const purchasedCount = list.filter(i => i.purchased).length;
       if (purchasedCount === 0) {
-        this.showToast('No completed items to clear.', 'info');
+        showNotification('No completed items to clear.', 'info');
         return;
       }
+      const clearedAutoProductIds = list.filter(i => i.purchased && i.source === 'auto' && i.productId).map(i => i.productId);
+      this.saveSuppressedProductIds([...this.getSuppressedProductIds(), ...clearedAutoProductIds]);
       list = list.filter(i => !i.purchased);
       this.saveShoppingList(list);
       this.renderShoppingList();
-      this.showToast(`Cleared ${purchasedCount} purchased item(s).`, 'success');
+      showNotification(`Cleared ${purchasedCount} purchased item(s).`, 'success');
     },
 
-    // Sets the active filter tab
+    currentCategoryFilter: 'All Categories',
+
+    // Sets the active filter tab (All, To Buy, Purchased)
     setFilter(filter) {
       this.currentFilter = filter;
       document.querySelectorAll('#shoppingFilterTabs .tab-btn').forEach(btn => {
@@ -654,7 +619,7 @@
       this.renderShoppingList();
     },
 
-    // Renders the Shopping List UI
+    // Renders the Shopping List UI (applies both status and category filters)
     renderShoppingList() {
       const list = this.getShoppingList();
       const tbody = document.getElementById('shoppingTableBody');
@@ -687,12 +652,17 @@
 
       if (!tbody) return;
 
-      // Apply filter
+      // Apply status filter
       let filtered = list;
       if (this.currentFilter === 'pending') {
-        filtered = list.filter(i => !i.purchased);
+        filtered = filtered.filter(i => !i.purchased);
       } else if (this.currentFilter === 'purchased') {
-        filtered = list.filter(i => i.purchased);
+        filtered = filtered.filter(i => i.purchased);
+      }
+
+      // Apply category filter
+      if (this.currentCategoryFilter && this.currentCategoryFilter !== 'All Categories') {
+        filtered = filtered.filter(i => i.category === this.currentCategoryFilter);
       }
 
       if (list.length === 0) {
@@ -706,7 +676,7 @@
       }
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No items matching this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">No items matching this category/filter.</td></tr>`;
         return;
       }
 
@@ -732,18 +702,27 @@
           </td>
           <td>
             <div class="product-cell">
-              <div class="product-img-placeholder" style="font-size: 16px;">🛒</div>
+              <div class="product-thumbnail-box" style="width: 28px; height: 28px; min-width: 28px; font-size: 10px;">
+                ${(function() {
+                  let img = null;
+                  if (typeof InventoryModule !== 'undefined' && InventoryModule.getProductImage) {
+                    img = InventoryModule.getProductImage(item);
+                  }
+                  if (img) return `<img src="${img}" alt="${item.name}" class="product-thumbnail-img" onerror="this.style.display='none';">`;
+                  return item.name ? item.name.slice(0, 2).toUpperCase() : 'SS';
+                })()}
+              </div>
               <div>
-                <span class="product-name shopping-item-name">${WebApiModule.escapeHTML(item.name)}</span>
+                <span class="product-name shopping-item-name">${item.name}</span>
                 <span class="product-meta">${item.source === 'auto' ? 'Auto-synced from inventory' : 'Added manually'}</span>
               </div>
             </div>
           </td>
-          <td><span class="badge badge-safe" style="font-size: 11px;">${WebApiModule.escapeHTML(item.category)}</span></td>
-          <td><strong>${WebApiModule.escapeHTML(item.quantity || '1 unit')}</strong></td>
+          <td><span class="badge badge-safe" style="font-size: 11px;">${item.category}</span></td>
+          <td><strong>${item.quantity || '1 unit'}</strong></td>
           <td>${reasonBadge}</td>
           <td style="text-align: right;">
-            <button class="btn btn-danger btn-sm remove-shopping-item" data-id="${item.id}" title="Remove from list">Delete</button>
+            <button class="table-btn table-btn-danger remove-shopping-item" data-id="${item.id}" title="Remove from list">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -767,7 +746,7 @@
     exportShoppingListPDF() {
       const list = this.getShoppingList();
       if (list.length === 0) {
-        alert('Your shopping list is empty. Add products or low-stock items before printing.');
+        showNotification('Your shopping list is empty. Add products or low-stock items before printing.', 'warning');
         return;
       }
 
@@ -836,9 +815,18 @@
       // Filter tabs listeners
       document.querySelectorAll('#shoppingFilterTabs .tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          this.setFilter(e.currentTarget.dataset.filter);
+          this.setFilter(e.target.dataset.filter);
         });
       });
+
+      // Category filter listener for shopping list
+      const shoppingCatFilter = document.getElementById('shoppingCategoryFilter');
+      if (shoppingCatFilter) {
+        shoppingCatFilter.addEventListener('change', (e) => {
+          this.currentCategoryFilter = e.target.value;
+          this.renderShoppingList();
+        });
+      }
 
       // Quick add custom item form
       const quickForm = document.getElementById('quickAddShoppingForm');
@@ -847,7 +835,7 @@
           e.preventDefault();
           const nameInput = document.getElementById('quickShoppingInput');
           const catSelect = document.getElementById('quickShoppingCategory');
-          const name = nameInput.value.trim();
+          const name = nameInput ? nameInput.value.trim() : '';
           if (!name) return;
 
           this.addItem({
@@ -876,6 +864,116 @@
         printBtn.addEventListener('click', () => {
           this.exportShoppingListPDF();
         });
+      }
+
+      // Email low-stock list button
+      const emailBtn = document.getElementById('emailLowStockBtn');
+      if (emailBtn) {
+        emailBtn.addEventListener('click', () => {
+          if (typeof EmailModule !== 'undefined') {
+            EmailModule.sendLowStockEmail();
+          }
+        });
+      }
+    }
+  };
+
+  // ==========================================
+  // EMAIL NOTIFICATION MODULE (EmailJS API)
+  // ------------------------------------------------------------
+  // Sends low-stock household inventory alerts directly from the
+  // client using EmailJS SDK. No Node.js backend required.
+  // ------------------------------------------------------------
+  const EmailModule = {
+    // Builds the list of low-stock / out-of-stock items to email
+    getLowStockItemsForEmail() {
+      return products
+        .filter(p => StorageModule.isOutOfStock(p.quantity) || StorageModule.isLowStock(p.quantity, ShoppingListModule.LOW_STOCK_THRESHOLD))
+        .map(p => ({
+          name: p.name,
+          category: p.category,
+          quantity: p.quantity,
+          status: StorageModule.isOutOfStock(p.quantity) ? 'Out of Stock' : 'Low Stock'
+        }));
+    },
+
+    async sendLowStockEmail() {
+      const btn = document.getElementById('emailLowStockBtn');
+      if (!AuthModule.currentUser) {
+        showNotification('⚠️ Please log in to send low-stock email notifications.', 'warning');
+        return;
+      }
+
+      const recipientEmail = AuthModule.currentUser.email ? AuthModule.currentUser.email.trim() : '';
+      if (!recipientEmail || !isValidEmail(recipientEmail)) {
+        showNotification('⚠️ Please update your profile with a valid email address first.', 'warning');
+        return;
+      }
+
+      // 1. Check for placeholder or missing EmailJS configuration
+      if (
+        typeof EMAIL_CONFIG === 'undefined' ||
+        !EMAIL_CONFIG.SERVICE_ID ||
+        !EMAIL_CONFIG.TEMPLATE_ID ||
+        !EMAIL_CONFIG.PUBLIC_KEY ||
+        EMAIL_CONFIG.SERVICE_ID.includes('YOUR_') ||
+        EMAIL_CONFIG.TEMPLATE_ID.includes('YOUR_') ||
+        EMAIL_CONFIG.PUBLIC_KEY.includes('YOUR_')
+      ) {
+        showNotification('⚠️ EmailJS is not configured yet. Please add your Service ID, Template ID, and Public Key in js/config.js.', 'warning');
+        console.warn('SafeShelf EmailJS Setup Required: Update EMAIL_CONFIG in js/config.js with your EmailJS credentials.');
+        return;
+      }
+
+      // 2. Check for low stock items
+      const items = this.getLowStockItemsForEmail();
+      if (items.length === 0) {
+        showNotification('✓ Nothing is low or out of stock right now — no email needed.', 'info');
+        return;
+      }
+
+      // 3. Format low-stock items text block
+      const formattedItems = items.map((item, index) => 
+        `${index + 1}. ${item.name}\n   Category: ${item.category}\n   Current Quantity: ${item.quantity}\n   Status: ${item.status}`
+      ).join('\n\n');
+
+      const templateParams = {
+        to_name: AuthModule.currentUser.name || 'SafeShelf User',
+        to_email: recipientEmail,
+        item_count: items.length,
+        low_stock_items: formattedItems,
+        app_name: 'SafeShelf'
+      };
+
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Sending Email...';
+      }
+
+      try {
+        // Initialize EmailJS with Public Key if SDK is loaded
+        if (typeof emailjs !== 'undefined' && emailjs.init) {
+          emailjs.init(EMAIL_CONFIG.PUBLIC_KEY);
+        }
+
+        const result = await emailjs.send(
+          EMAIL_CONFIG.SERVICE_ID,
+          EMAIL_CONFIG.TEMPLATE_ID,
+          templateParams
+        );
+
+        console.log('EmailJS response:', result);
+        showNotification(`✓ Low-stock notification emailed to ${recipientEmail}.`, 'success');
+      } catch (err) {
+        console.error('EmailJS error:', err);
+        const errorText = err && (err.text || err.message) ? (err.text || err.message) : 'Check EmailJS credentials.';
+        showNotification(`⚠️ Failed to send email: ${errorText}`, 'warning');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
       }
     }
   };

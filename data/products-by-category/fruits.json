@@ -1,0 +1,189 @@
+[
+  {
+    "id": 1,
+    "name": "Apples",
+    "price": 180,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/001-apple.jpeg",
+    "description": "Crisp, juicy apples with a naturally sweet-tart bite—perfect for snacking, lunchboxes, or a refreshing fruit bowl.",
+    "category": "Fruits"
+  },
+  {
+    "id": 2,
+    "name": "Bananas",
+    "price": 60,
+    "currency": "INR",
+    "price_unit": "dozen",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/002-banana.jpeg",
+    "description": "Naturally sweet, soft bananas that make an easy breakfast, smoothie ingredient, or anytime snack.",
+    "category": "Fruits"
+  },
+  {
+    "id": 46,
+    "name": "Black Grapes",
+    "price": 100,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/046-grapes.jpeg",
+    "description": "Juicy, sweet-tart grapes for snacking, fruit bowls, and a refreshing chilled treat.",
+    "category": "Fruits"
+  },
+  {
+    "id": 25,
+    "name": "Coconut",
+    "price": 45,
+    "currency": "INR",
+    "price_unit": "1 piece",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/025-coconut.jpeg",
+    "description": "Fresh coconut with a fragrant flavour—use it in chutneys, curries, desserts, and festive recipes.",
+    "category": "Fruits"
+  },
+  {
+    "id": 50,
+    "name": "Guava",
+    "price": 70,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/050-guava.jpeg",
+    "description": "Fragrant guavas with a sweet, gently tangy flavour—great sliced with a sprinkle of chaat masala.",
+    "category": "Fruits"
+  },
+  {
+    "id": 56,
+    "name": "Kiwi",
+    "price": 220,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/056-kiwi.jpeg",
+    "description": "Bright, tangy-sweet kiwi with a juicy centre—delicious sliced into fruit bowls, smoothies, or breakfast.",
+    "category": "Fruits"
+  },
+  {
+    "id": 60,
+    "name": "Lemons",
+    "price": 80,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/060-lemon.jpeg",
+    "description": "Fresh lemons with a bright citrus zing for nimbu pani, dressings, chutneys, and everyday cooking.",
+    "category": "Fruits"
+  },
+  {
+    "id": 63,
+    "name": "Mangoes",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/063-mango.jpeg",
+    "description": "Sweet, fragrant mangoes for fruit bowls, smoothies, desserts, and a sunny seasonal snack.",
+    "category": "Fruits"
+  },
+  {
+    "id": 70,
+    "name": "Muskmelon",
+    "price": 50,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/070-muskmelon.jpeg",
+    "description": "Sweet, fragrant muskmelon with a juicy texture—best enjoyed chilled in fruit bowls or on its own.",
+    "category": "Fruits"
+  },
+  {
+    "id": 73,
+    "name": "Oranges",
+    "price": 80,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/073-orange.jpeg",
+    "description": "Juicy oranges with a sweet citrus flavour—easy to peel for a refreshing snack or fruit bowl.",
+    "category": "Fruits"
+  },
+  {
+    "id": 75,
+    "name": "Papaya",
+    "price": 50,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/075-papaya.jpeg",
+    "description": "Ripe, fragrant papaya with a mellow sweetness—lovely for breakfast, fruit bowls, and smoothies.",
+    "category": "Fruits"
+  },
+  {
+    "id": 78,
+    "name": "Peaches",
+    "price": 180,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/078-peach.jpeg",
+    "description": "Soft, fragrant peaches with a sweet, juicy bite—enjoy fresh or add to breakfast bowls and desserts.",
+    "category": "Fruits"
+  },
+  {
+    "id": 79,
+    "name": "Pears",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/079-pear.jpeg",
+    "description": "Juicy pears with a gentle sweetness and crisp-tender texture—ideal for a quick snack or fruit bowl.",
+    "category": "Fruits"
+  },
+  {
+    "id": 82,
+    "name": "Pineapple",
+    "price": 60,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/082-pineapple.jpeg",
+    "description": "Sweet-tangy pineapple with a tropical aroma—delicious chilled, blended, or served in fruit salads.",
+    "category": "Fruits"
+  },
+  {
+    "id": 81,
+    "name": "Pomegranate",
+    "price": 160,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/081-pemoegranate.jpeg",
+    "description": "Ruby-red pomegranate arils with a juicy, sweet-tart crunch for salads, bowls, and snacking.",
+    "category": "Fruits"
+  },
+  {
+    "id": 101,
+    "name": "Strawberries",
+    "price": 250,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/101-strawbwrry.jpeg",
+    "description": "Bright, fragrant strawberries with a sweet-tart flavour—lovely in fruit bowls, smoothies, and desserts.",
+    "category": "Fruits"
+  },
+  {
+    "id": 111,
+    "name": "Watermelon",
+    "price": 30,
+    "currency": "INR",
+    "price_unit": "kg",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/111-watermelon.jpeg",
+    "description": "Juicy watermelon with a refreshing sweetness—serve chilled for an easy summer snack.",
+    "category": "Fruits"
+  }
+]

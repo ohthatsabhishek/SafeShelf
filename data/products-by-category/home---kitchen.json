@@ -1,0 +1,35 @@
+[
+  {
+    "id": 109,
+    "name": "2-Slice Bread Toaster",
+    "price": 1299,
+    "currency": "INR",
+    "price_unit": "1 unit",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/109-twoslicebreadtoaster.jpeg",
+    "description": "A compact toaster for crisp breakfast toast and quick snacks. Check wattage and safety instructions before use.",
+    "category": "Home & Kitchen"
+  },
+  {
+    "id": 10,
+    "name": "Blender",
+    "price": 1499,
+    "currency": "INR",
+    "price_unit": "1 unit",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/010-blender.jpeg",
+    "description": "A handy kitchen blender for preparing smoothies, shakes, chutneys, and everyday blends.",
+    "category": "Home & Kitchen"
+  },
+  {
+    "id": 38,
+    "name": "Electric Kettle",
+    "price": 799,
+    "currency": "INR",
+    "price_unit": "1 unit",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/038-electric-kettle.jpeg",
+    "description": "A convenient electric kettle for boiling water for tea, coffee, and quick kitchen prep. Check capacity and safety instructions before use.",
+    "category": "Home & Kitchen"
+  }
+]

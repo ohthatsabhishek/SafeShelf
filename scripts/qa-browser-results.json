@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-10-25T14:50:57.200Z",
+  "browser": "Google Chrome (Interactive Headed)",
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Homepage & Auth View",
+      "status": "PASS",
+      "details": "Title: SafeShelf — Curated Household Pantry & Inventory",
+      "screenshot": "01_login_screen.png"
+    },
+    {
+      "name": "Authentication & Sign-In",
+      "status": "PASS",
+      "details": "Greeting: \"Good evening, Demo\""
+    },
+    {
+      "name": "Dashboard Metrics & Recent Items",
+      "status": "PASS",
+      "details": "5 recent table rows rendered",
+      "screenshot": "02_dashboard_overview.png"
+    },
+    {
+      "name": "Inventory View Navigation",
+      "status": "PASS",
+      "details": "Inventory view and table rendered",
+      "screenshot": "03_inventory_view.png"
+    },
+    {
+      "name": "Product Creation & Multer Upload",
+      "status": "PASS",
+      "details": "Uploaded URL: /uploads/482ff819-b677-4eb5-8687-2fb6c6240452.png",
+      "screenshot": "04_drawer_multer_upload.png"
+    },
+    {
+      "name": "Product Specification Modal",
+      "status": "PASS",
+      "details": "Modal showed product specs",
+      "screenshot": "05_product_modal.png"
+    },
+    {
+      "name": "Product Edit & Quantity Update",
+      "status": "PASS",
+      "details": "Quantity updated to 10 kg",
+      "screenshot": "06_product_edited.png"
+    },
+    {
+      "name": "Catalog Search Integration",
+      "status": "PASS",
+      "details": "2 products found for query \"honey\"",
+      "screenshot": "07_catalog_search.png"
+    },
+    {
+      "name": "Shopping List Add & Render",
+      "status": "PASS",
+      "details": "Added \"QA Almond Milk mvny2xhd\""
+    },
+    {
+      "name": "Shopping List Status Toggle",
+      "status": "PASS",
+      "details": "Toggled purchased state",
+      "screenshot": "08_shopping_list.png"
+    },
+    {
+      "name": "Multer CSV Import & Preview",
+      "status": "PASS",
+      "details": "CSV parsed and items imported",
+      "screenshot": "09_csv_import.png"
+    },
+    {
+      "name": "Profile Settings & Identity Update",
+      "status": "PASS",
+      "details": "Profile message: \"Profile updated successfully.\"",
+      "screenshot": "10_profile_settings.png"
+    },
+    {
+      "name": "Data Persistence on Reload",
+      "status": "PASS",
+      "details": "User session and inventory persisted from MongoDB",
+      "screenshot": "11_reload_persistence.png"
+    },
+    {
+      "name": "Item Deletion & Cleanup",
+      "status": "PASS",
+      "details": "Test item deleted cleanly",
+      "screenshot": "12_cleanup_deleted.png"
+    },
+    {
+      "name": "Logout & Session Clearance",
+      "status": "PASS",
+      "details": "Token cleared and authContainer displayed",
+      "screenshot": "13_logged_out.png"
+    }
+  ],
+  "consoleErrors": [],
+  "failedRequests": []
+}

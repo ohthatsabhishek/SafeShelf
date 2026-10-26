@@ -1,0 +1,10 @@
+const express = require('express');
+const path = require('path');
+const crypto = require('crypto');
+const multer = require('multer');
+const auth = require('../middleware/auth');
+const router = express.Router();
+const storage = multer.diskStorage({ destination: path.join(__dirname, '../../uploads'), filename: (req,file,cb)=>cb(null, crypto.randomUUID()+path.extname(file.originalname).toLowerCase()) });
+const upload = multer({ storage, limits:{fileSize:5*1024*1024, files:1}, fileFilter:(req,file,cb)=>{ const allowed={'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp'}; if(!allowed[file.mimetype]) return cb(new Error('Only JPEG, PNG or WebP images are allowed.')); cb(null,true); } });
+router.post('/image', auth, upload.single('image'), (req,res)=>{ if(!req.file) return res.status(400).json({error:'Choose an image file.'}); res.status(201).json({url:`/uploads/${req.file.filename}`, filename:req.file.filename}); });
+module.exports = router;

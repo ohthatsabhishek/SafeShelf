@@ -1,0 +1,145 @@
+[
+  {
+    "id": 4,
+    "name": "Bathroom Cleaner",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/004-bathroomcleaner.jpeg",
+    "description": "A handy bathroom-cleaning solution for everyday toilet and surface cleaning. Follow the label directions.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 9,
+    "name": "Bleach",
+    "price": 95,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/009-bleach.jpeg",
+    "description": "A household bleach product for suitable cleaning tasks. Use only as directed on the label and never mix with other cleaners.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 36,
+    "name": "Dishwash Liquid",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/036-dishwash.jpeg",
+    "description": "A convenient dishwashing liquid for everyday utensils, helping lift grease during your washing routine.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 37,
+    "name": "Disinfectant",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/037-disinfactant.jpeg",
+    "description": "A household disinfectant for suitable surfaces when used according to the product label.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 40,
+    "name": "Floor Cleaner",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/040-floorcleaner.jpeg",
+    "description": "A fresh-scented floor-cleaning liquid for routine home cleaning. Dilute and use as directed on the label.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 41,
+    "name": "Garbage Bags",
+    "price": 99,
+    "currency": "INR",
+    "price_unit": "30-count pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/041-garbagebags.jpeg",
+    "description": "Convenient garbage bags for daily kitchen and household waste disposal. Choose a suitable size for your bin.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 45,
+    "name": "Glass Cleaner",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "500 ml spray",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/045-glasscleaner.jpeg",
+    "description": "A convenient spray cleaner for suitable glass and shiny surfaces. Follow the instructions for a clear finish.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 100,
+    "name": "Kitchen Sponge",
+    "price": 35,
+    "currency": "INR",
+    "price_unit": "2-piece pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/100-sponge.jpeg",
+    "description": "A handy kitchen sponge for everyday dishwashing and wiping. Use the softer side on delicate surfaces.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 35,
+    "name": "Laundry Detergent",
+    "price": 120,
+    "currency": "INR",
+    "price_unit": "1 kg pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/035-detergent.jpeg",
+    "description": "A practical laundry detergent for routine washing. Use the recommended quantity for your load and machine type.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 59,
+    "name": "Laundry Liquid",
+    "price": 220,
+    "currency": "INR",
+    "price_unit": "1 L bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/059-laundryliquid.jpeg",
+    "description": "Liquid laundry detergent for everyday clothing care. Follow the pack directions for dosage and fabric suitability.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 76,
+    "name": "Paper Towels",
+    "price": 99,
+    "currency": "INR",
+    "price_unit": "2-roll pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/076-papertowels.png",
+    "description": "Absorbent paper towels for quick kitchen spills, wiping, and everyday household clean-ups.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 94,
+    "name": "Scrub Pads",
+    "price": 40,
+    "currency": "INR",
+    "price_unit": "3-piece pack",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/094-scrubpad.jpeg",
+    "description": "Practical scrub pads for tackling everyday dishwashing mess. Test delicate surfaces before scrubbing.",
+    "category": "Cleaning & Household"
+  },
+  {
+    "id": 105,
+    "name": "Toilet Cleaner",
+    "price": 110,
+    "currency": "INR",
+    "price_unit": "500 ml bottle",
+    "price_is_estimate": true,
+    "image": "./dataset_assets/105-toiletcleaner.jpeg",
+    "description": "A toilet-cleaning liquid for routine bathroom care. Use only as directed and never mix with other cleaning products.",
+    "category": "Cleaning & Household"
+  }
+]

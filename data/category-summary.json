@@ -1,0 +1,62 @@
+{
+  "totalProducts": 112,
+  "categoryCount": 10,
+  "categories": [
+    {
+      "name": "Atta, Rice & Dal",
+      "count": 18,
+      "file": "SafeShelf-V1/data/products-by-category/atta--rice---dal.json"
+    },
+    {
+      "name": "Breakfast & Spreads",
+      "count": 2,
+      "file": "SafeShelf-V1/data/products-by-category/breakfast---spreads.json"
+    },
+    {
+      "name": "Cleaning & Household",
+      "count": 13,
+      "file": "SafeShelf-V1/data/products-by-category/cleaning---household.json"
+    },
+    {
+      "name": "Dairy, Bread & Eggs",
+      "count": 12,
+      "file": "SafeShelf-V1/data/products-by-category/dairy--bread---eggs.json"
+    },
+    {
+      "name": "Fruits",
+      "count": 17,
+      "file": "SafeShelf-V1/data/products-by-category/fruits.json"
+    },
+    {
+      "name": "Health Essentials",
+      "count": 1,
+      "file": "SafeShelf-V1/data/products-by-category/health-essentials.json"
+    },
+    {
+      "name": "Home & Kitchen",
+      "count": 3,
+      "file": "SafeShelf-V1/data/products-by-category/home---kitchen.json"
+    },
+    {
+      "name": "Masala, Oil & More",
+      "count": 4,
+      "file": "SafeShelf-V1/data/products-by-category/masala--oil---more.json"
+    },
+    {
+      "name": "Personal Care",
+      "count": 17,
+      "file": "SafeShelf-V1/data/products-by-category/personal-care.json"
+    },
+    {
+      "name": "Vegetables",
+      "count": 25,
+      "file": "SafeShelf-V1/data/products-by-category/vegetables.json"
+    }
+  ],
+  "notes": [
+    "All source products are retained.",
+    "The only previously Uncategorized product, Himalyan Facewash, is classified as Personal Care based on its product name.",
+    "Prices are estimates from the source dataset, not live prices.",
+    "Product image paths are retained and should be checked after deployment."
+  ]
+}
