@@ -169,18 +169,18 @@
 
         const sourceClass = item.source === 'API' ? 'source-api' : 'source-catalog';
         const sourceLabel = item.source === 'API' ? 'Public API' : 'SafeShelf Catalog';
-        const safeImage = item.image ? String(item.image).replace(/"/g, '&quot;') : '';
+        const safeImage = safeImageURL(item.image);
         const iconOrThumb = safeImage
-          ? `<img src="${safeImage}" alt="${String(item.name || 'Product').replace(/"/g, '&quot;')}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.textContent='📦';">`
+          ? `<img src="${escapeHTML(safeImage)}" alt="${escapeHTML(item.name || 'Product')}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.parentElement.textContent='📦';">`
           : '📦';
 
         li.innerHTML = `
           <div class="picker-card-left">
             <div class="picker-thumb">${iconOrThumb}</div>
             <div class="picker-info">
-              <div class="picker-title">${item.name}</div>
+              <div class="picker-title">${escapeHTML(item.name)}</div>
               <div class="picker-meta">
-                <span class="badge badge-safe" style="font-size: 10px; padding: 2px 6px;">${item.categoryName}</span>
+                <span class="badge badge-safe" style="font-size: 10px; padding: 2px 6px;">${escapeHTML(item.categoryName)}</span>
                 <span class="picker-source-tag ${sourceClass}">${sourceLabel}</span>
               </div>
             </div>
@@ -222,20 +222,20 @@
       modalBody.innerHTML = `
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="font-size: 48px; margin-bottom: 8px;">📦</div>
-          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark);">${product.name}</h2>
+          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark);">${escapeHTML(product.name)}</h2>
           <div style="display: flex; justify-content: center; gap: 8px; align-items: center; margin-top: 8px;">
             <span class="badge" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px; ${badgeStyle}">${sourceLabel}</span>
-            <span class="badge badge-safe" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px;">${product.categoryName}</span>
+            <span class="badge badge-safe" style="font-size: 11px; padding: 4px 10px; border-radius: 9999px;">${escapeHTML(product.categoryName)}</span>
           </div>
         </div>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; width: 40%; color: var(--text-dark);">Brand / Manufacturer:</td>
-            <td style="padding: 10px 8px; color: var(--text-dark);">${brand}</td>
+            <td style="padding: 10px 8px; color: var(--text-dark);">${escapeHTML(brand)}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; color: var(--text-dark);">Quantity Suggestion:</td>
-            <td style="padding: 10px 8px; color: var(--text-dark);">${defaultQty}</td>
+            <td style="padding: 10px 8px; color: var(--text-dark);">${escapeHTML(defaultQty)}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="font-weight: 600; padding: 10px 8px; color: var(--text-dark);">Shelf Life / Suggestion:</td>
@@ -243,7 +243,7 @@
           </tr>
           <tr>
             <td style="font-weight: 600; padding: 10px 8px; vertical-align: top; color: var(--text-dark);">Description:</td>
-            <td style="padding: 10px 8px; color: var(--text-muted); line-height: 1.4;">${product.description || 'No description available.'}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted); line-height: 1.4;">${escapeHTML(product.description || 'No description available.')}</td>
           </tr>
         </table>
         <div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -402,7 +402,7 @@
     },
 
     saveShoppingList(items) {
-      StorageModule.saveShoppingList(AuthModule.currentUser ? AuthModule.currentUser.id : null, items);
+      return StorageModule.saveShoppingList(AuthModule.currentUser ? AuthModule.currentUser.id : null, items);
     },
 
     getSuppressedProductIds() {
@@ -698,7 +698,7 @@
 
         tr.innerHTML = `
           <td style="text-align: center;">
-            <input type="checkbox" class="shopping-checkbox" data-id="${item.id}" ${item.purchased ? 'checked' : ''} aria-label="Mark as purchased">
+            <input type="checkbox" class="shopping-checkbox" data-id="${escapeHTML(item.id)}" ${item.purchased ? 'checked' : ''} aria-label="Mark as purchased">
           </td>
           <td>
             <div class="product-cell">
@@ -708,21 +708,21 @@
                   if (typeof InventoryModule !== 'undefined' && InventoryModule.getProductImage) {
                     img = InventoryModule.getProductImage(item);
                   }
-                  if (img) return `<img src="${img}" alt="${item.name}" class="product-thumbnail-img" onerror="this.style.display='none';">`;
+                  if (img) return `<img src="${escapeHTML(safeImageURL(img))}" alt="${escapeHTML(item.name)}" class="product-thumbnail-img" onerror="this.style.display='none';">`;
                   return item.name ? item.name.slice(0, 2).toUpperCase() : 'SS';
                 })()}
               </div>
               <div>
-                <span class="product-name shopping-item-name">${item.name}</span>
+                <span class="product-name shopping-item-name">${escapeHTML(item.name)}</span>
                 <span class="product-meta">${item.source === 'auto' ? 'Auto-synced from inventory' : 'Added manually'}</span>
               </div>
             </div>
           </td>
-          <td><span class="badge badge-safe" style="font-size: 11px;">${item.category}</span></td>
-          <td><strong>${item.quantity || '1 unit'}</strong></td>
+          <td><span class="badge badge-safe" style="font-size: 11px;">${escapeHTML(item.category)}</span></td>
+          <td><strong>${escapeHTML(item.quantity || '1 unit')}</strong></td>
           <td>${reasonBadge}</td>
           <td style="text-align: right;">
-            <button class="table-btn table-btn-danger remove-shopping-item" data-id="${item.id}" title="Remove from list">Delete</button>
+            <button class="table-btn table-btn-danger remove-shopping-item" data-id="${escapeHTML(item.id)}" title="Remove from list">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -770,9 +770,9 @@
             <td style="width: 32px; text-align: center;">
               <span class="print-checkbox">${item.purchased ? '✓' : ''}</span>
             </td>
-            <td><strong>${item.name}</strong></td>
-            <td>${item.category}</td>
-            <td>${item.quantity || '1 unit'}</td>
+            <td><strong>${escapeHTML(item.name)}</strong></td>
+            <td>${escapeHTML(item.category)}</td>
+            <td>${escapeHTML(item.quantity || '1 unit')}</td>
             <td><span class="print-badge">${reasonText}</span></td>
           </tr>
         `;
@@ -934,7 +934,7 @@
 
       // 3. Format low-stock items text block
       const formattedItems = items.map((item, index) => 
-        `${index + 1}. ${item.name}\n   Category: ${item.category}\n   Current Quantity: ${item.quantity}\n   Status: ${item.status}`
+        `${index + 1}. ${escapeHTML(item.name)}\n   Category: ${escapeHTML(item.category)}\n   Current Quantity: ${escapeHTML(item.quantity)}\n   Status: ${item.status}`
       ).join('\n\n');
 
       const templateParams = {

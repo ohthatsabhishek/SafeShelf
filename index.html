@@ -94,7 +94,7 @@
             
             <div class="form-group">
               <label for="loginEmail">Email Address</label>
-              <input type="email" id="loginEmail" class="form-input" placeholder="e.g. demo@safeshelf.com" required autocomplete="email">
+              <input type="email" id="loginEmail" class="form-input" placeholder="e.g. alex@example.com" required autocomplete="email">
             </div>
             
             <div class="form-group">
@@ -103,17 +103,6 @@
             </div>
             
             <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-            
-            <!-- Quick Demo Credentials Auto-Fill Banner -->
-            <div class="auth-demo-callout">
-              <div class="demo-callout-text">
-                <span class="demo-tag">DEMO ACCOUNT</span>
-                <strong>demo@safeshelf.com</strong> · <code>password</code>
-              </div>
-              <button type="button" class="btn btn-secondary btn-sm" id="fillDemoCredentialsBtn">
-                ✨ Fill Credentials
-              </button>
-            </div>
 
             <div class="auth-footer-switch">
               Don't have an account? <button type="button" id="showRegisterBtn" class="link-btn">Create Household Account</button>
@@ -266,7 +255,7 @@
           <span class="pulse-dot"></span>
           Pantry Sync Active
         </div>
-        <div class="sidebar-meta-desc">SafeShelf Editorial V1 · Local Storage Persisted</div>
+        <div class="sidebar-meta-desc">SafeShelf Provisions · Secure &amp; Verified</div>
       </div>
     </aside>
 
@@ -286,6 +275,9 @@
         </div>
 
         <div class="header-actions">
+          <!-- Cloud Sync Status Indicator -->
+          <div id="cloudSyncStatus" class="cloud-sync-status" style="display:none;" title="Cloud synchronization status"></div>
+
           <!-- Notification Bell Menu -->
           <div class="notification-wrapper">
             <button class="notification-btn" aria-label="Notifications" id="notifBtn">
@@ -308,8 +300,8 @@
           
           <!-- User Profile Dropdown -->
           <div class="profile-widget" id="profileBtn" tabindex="0">
-            <div class="profile-avatar-initial" id="navAvatar">D</div>
-            <span class="profile-name">Demo User</span>
+            <div class="profile-avatar-initial" id="navAvatar">U</div>
+            <span class="profile-name">My Pantry</span>
             <span class="profile-chevron">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </span>
@@ -335,7 +327,7 @@
           <!-- DISTINCTIVE EDITORIAL WELCOME HERO -->
           <div class="dashboard-editorial-welcome">
             <div class="welcome-copy-col">
-              <div class="editorial-meta-tag" id="dashboardGreeting">Good morning, Demo 👋</div>
+              <div class="editorial-meta-tag" id="dashboardGreeting">Welcome back 👋</div>
               <h1 class="dashboard-hero-title">Household Provisions &amp; Freshness Ledger</h1>
               <p class="dashboard-hero-subtitle" id="dashboardHeroSubtitle">
                 Real-time pantry status, upcoming expiries, and essential replenishment.
@@ -1259,7 +1251,6 @@
   <script src="js/dataset-catalog.js?v=3"></script> <!-- Local 112-product dataset; works offline -->
   <script src="js/features.js?v=5"></script>   <!-- Module 3: REST API & Shopping List -->
   <script src="js/dashboard.js?v=5"></script>  <!-- Module 4: Dashboard, Routing, Boot -->
-<script src="js/shopping-import.js?v=1"></script>
-  <script src="js/live-demo-runner.js?v=1"></script>
+  <script src="js/shopping-import.js?v=1"></script>
 </body>
 </html>

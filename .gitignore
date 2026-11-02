@@ -1,27 +1,27 @@
-# Dependencies
+# Dependencies and local runtime files
 node_modules/
 
 # Environment & Secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Multer Uploads (persist directory structure via .gitkeep)
+# User uploads are runtime data; keep only the placeholder
 uploads/*
 !uploads/.gitkeep
 
-# Temporary / Local Logs
+# Local logs, caches and OS files
 *.log
 demo-run.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Local Backups & Runner Scripts
-_backup_*/
-*.bak
-run-demo.bat
-
-# OS metadata
 .DS_Store
 Thumbs.db
+
+# Local backups and runner/test artifacts
+_backup*/
+*.bak
+run-demo.bat
+playwright-report/
+test-results/

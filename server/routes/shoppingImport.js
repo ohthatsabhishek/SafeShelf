@@ -4,7 +4,9 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
   const ext = String(file.originalname || '').toLowerCase().split('.').pop();
-  if (ext !== 'csv' || (file.mimetype && !['text/csv','application/vnd.ms-excel','application/csv','text/plain','application/octet-stream'].includes(file.mimetype))) return cb(new Error('Upload a .csv file only.'));
+  if (ext !== 'csv' || (file.mimetype && !['text/csv','application/vnd.ms-excel','application/csv','text/plain','application/octet-stream'].includes(file.mimetype))) {
+    return cb(Object.assign(new Error('Upload a .csv file only.'), { status: 400 }));
+  }
   cb(null, true);
 }});
 function parseCsv(text) {
@@ -16,8 +18,9 @@ function parseCsv(text) {
     else if(ch==='\n'){row.push(field.trim()); if(row.some(v=>v!=='')) rows.push(row); row=[];field='';}
     else if(ch!=='\r') field+=ch;
   }
-  if(quoted) throw new Error('CSV contains an unclosed quoted field.');
+  if(quoted) throw Object.assign(new Error('CSV contains an unclosed quoted field.'), { status: 400 });
   if(field!=='' || row.length){row.push(field.trim());if(row.some(v=>v!==''))rows.push(row);}
+  if(rows.length > 501) throw Object.assign(new Error('CSV is limited to 500 data rows.'), { status: 413 });
   return rows;
 }
 router.post('/preview', auth, upload.single('file'), (req,res)=>{
@@ -33,10 +36,13 @@ router.post('/preview', auth, upload.single('file'), (req,res)=>{
     const valid=[], invalid=[];
     rows.forEach((r,i)=>{const name=String(r[nameIndex]||'').trim(); const quantity=qtyIndex<0?'1':String(r[qtyIndex]||'1').trim(); const category=categoryIndex<0?'Other':String(r[categoryIndex]||'Other').trim();
       if(!name || name.length>160 || quantity.length>60 || category.length>80) invalid.push({row:i+2,reason:'Missing or overly long item name, quantity or category.'});
+      else if (/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(name + quantity + category)) invalid.push({row:i+2,reason:'Control characters are not allowed.'});
       else valid.push({name,quantity,category,source:'import'});
     });
     if(valid.length>500) return res.status(413).json({error:'Import is limited to 500 rows per file.'});
     res.json({items:valid,invalid,total:rows.length});
-  } catch(e){res.status(400).json({error:e.message||'Could not parse CSV.'});}
+  } catch (e) {
+    res.status(e.status || 400).json({ error: e.message || 'Could not parse CSV.' });
+  }
 });
 module.exports=router;

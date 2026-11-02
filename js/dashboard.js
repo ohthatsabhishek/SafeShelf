@@ -50,29 +50,43 @@
         const validInventory = data.inventory.every(item => item && typeof item.name === 'string' && typeof item.category === 'string' && item.id !== undefined);
         const validShopping = data.shoppingList.every(item => item && typeof item.name === 'string');
         if (!validInventory || !validShopping) throw new Error('Backup contents failed validation.');
-        if (!confirm(`Restore ${data.inventory.length} inventory item(s) and ${data.shoppingList.length} shopping-list item(s)? This replaces the current household inventory and shopping list.`)) return;
-        const uid = user.id;
-        const importedProducts = data.inventory.map(item => ({ ...item, userId: uid }));
-        StorageModule.saveProducts(importedProducts);
-        StorageModule.saveShoppingList(uid, data.shoppingList);
-        const writeUserMap = (key, value) => {
-          let map = {}; try { map = JSON.parse(localStorage.getItem(key) || '{}'); } catch (_) {}
-          map[uid] = value; localStorage.setItem(key, JSON.stringify(map));
+        const proceedRestore = async () => {
+          const uid = user.id;
+          const importedProducts = data.inventory.map(item => ({ ...item, userId: uid }));
+          await StorageModule.saveProducts(importedProducts);
+          const syncRes = await StorageModule.saveShoppingList(uid, data.shoppingList);
+          const writeUserMap = (key, value) => {
+            let map = {}; try { map = JSON.parse(localStorage.getItem(key) || '{}'); } catch (_) {}
+            map[uid] = value; localStorage.setItem(key, JSON.stringify(map));
+          };
+          writeUserMap('safeshelf_shopping_suppressed', Array.isArray(data.shoppingSuppressed) ? data.shoppingSuppressed : []);
+          writeUserMap('safeshelf_dismissed_notifications', Array.isArray(data.dismissedNotifications) ? data.dismissedNotifications : []);
+          if (data.household) {
+            user.notificationsEnabled = data.household.notificationsEnabled !== false;
+            user.reminderDays = [3,7,14,30].includes(Number(data.household.reminderDays)) ? Number(data.household.reminderDays) : 7;
+            AuthModule.currentUser = user;
+            localStorage.setItem(AuthModule.CURRENT_USER_KEY, JSON.stringify(user));
+            const users = AuthModule.getUsers(); const index = users.findIndex(entry => entry.id === uid);
+            if (index >= 0) { users[index].notificationsEnabled = user.notificationsEnabled; users[index].reminderDays = user.reminderDays; localStorage.setItem(AuthModule.USERS_KEY, JSON.stringify(users)); }
+          }
+          products = StorageModule.loadProducts();
+          if (typeof ShoppingListModule !== 'undefined' && ShoppingListModule.syncShoppingList) ShoppingListModule.syncShoppingList(products);
+          if (typeof DashboardModule !== 'undefined') { DashboardModule.updateDashboardMetrics(products); DashboardModule.renderWarrantyTracker(products); DashboardModule.renderFullNotifications(products); DashboardModule.updateNotifications(products); }
+          if (syncRes && syncRes.ok) {
+            showNotification('Backup restored and synced to cloud.', 'success');
+          } else if (syncRes && (syncRes.status === 'offline' || syncRes.status === 503)) {
+            showNotification('Backup restored locally (cloud sync offline).', 'info');
+          } else {
+            showNotification('Backup restored locally on this device.', 'info');
+          }
         };
-        writeUserMap('safeshelf_shopping_suppressed', Array.isArray(data.shoppingSuppressed) ? data.shoppingSuppressed : []);
-        writeUserMap('safeshelf_dismissed_notifications', Array.isArray(data.dismissedNotifications) ? data.dismissedNotifications : []);
-        if (data.household) {
-          user.notificationsEnabled = data.household.notificationsEnabled !== false;
-          user.reminderDays = [3,7,14,30].includes(Number(data.household.reminderDays)) ? Number(data.household.reminderDays) : 7;
-          AuthModule.currentUser = user;
-          localStorage.setItem(AuthModule.CURRENT_USER_KEY, JSON.stringify(user));
-          const users = AuthModule.getUsers(); const index = users.findIndex(entry => entry.id === uid);
-          if (index >= 0) { users[index].notificationsEnabled = user.notificationsEnabled; users[index].reminderDays = user.reminderDays; localStorage.setItem(AuthModule.USERS_KEY, JSON.stringify(users)); }
+
+        const confirmMsg = `Restore ${data.inventory.length} inventory item(s) and ${data.shoppingList.length} shopping-list item(s)? This replaces the current household inventory and shopping list.`;
+        if (typeof showConfirm === 'function') {
+          showConfirm('Restore Backup', confirmMsg, proceedRestore, 'Restore');
+        } else if (confirm(confirmMsg)) {
+          await proceedRestore();
         }
-        products = StorageModule.loadProducts();
-        if (typeof ShoppingListModule !== 'undefined' && ShoppingListModule.syncShoppingList) ShoppingListModule.syncShoppingList(products);
-        if (typeof DashboardModule !== 'undefined') { DashboardModule.updateDashboardMetrics(products); DashboardModule.renderWarrantyTracker(products); DashboardModule.renderFullNotifications(products); DashboardModule.updateNotifications(products); }
-        showNotification('Backup restored successfully.', 'success');
       } catch (error) { showNotification(error.message || 'Could not restore this backup.', 'error'); }
     },
     init() {
@@ -298,17 +312,17 @@
             <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
               ${thumbMarkup}
               <div style="min-width: 0; display: flex; flex-direction: column;">
-                <span class="attention-product-name" title="${item.name}">${item.name}</span>
+                <span class="attention-product-name" title="${escapeHTML(item.name)}">${escapeHTML(item.name)}</span>
                 <span class="attention-product-meta">
-                  <span class="attention-cat-pill">${item.category}</span>
+                  <span class="attention-cat-pill">${escapeHTML(item.category)}</span>
                   <span class="attention-meta-dot">·</span>
-                  <span>${item.quantity}</span>
+                  <span>${escapeHTML(item.quantity)}</span>
                 </span>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
               <span class="badge ${status.class}">${daysText}</span>
-              <button type="button" class="table-btn table-btn-shop action-shop" data-id="${item.id}" title="Add to Shopping List">+ List</button>
+              <button type="button" class="table-btn table-btn-shop action-shop" data-id="${escapeHTML(item.id)}" title="Add to Shopping List">+ List</button>
             </div>
           `;
           listContainer.appendChild(div);
@@ -389,8 +403,8 @@
             const li = document.createElement('li');
             li.className = 'dropdown-item';
             li.innerHTML = `
-              <div style="font-weight: 600; font-size: 12px;">${item.name}</div>
-              <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px;">${daysText} (${item.category})</div>
+              <div style="font-weight: 600; font-size: 12px;">${escapeHTML(item.name)}</div>
+              <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px;">${daysText} (${escapeHTML(item.category)})</div>
             `;
             li.onclick = () => {
               NavigationModule.navigateToView('expiring');
@@ -455,15 +469,15 @@
         card.innerHTML = `
           <div class="expiry-item-card-header">
             <div>
-              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category}</span>
-              <h4 style="font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin: 1px 0 3px;">${item.name}</h4>
-              <span style="font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);">${item.quantity}</span>
+              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${escapeHTML(item.category)}</span>
+              <h4 style="font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin: 1px 0 3px;">${escapeHTML(item.name)}</h4>
+              <span style="font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);">${escapeHTML(item.quantity)}</span>
             </div>
             <span class="badge ${badgeClass}">${countdownLabel}</span>
           </div>
           <div style="display: flex; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-hairline);">
-            <button type="button" class="table-btn table-btn-shop action-shop" data-id="${item.id}" style="flex: 1.2;">+ List</button>
-            <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}">View</button>
+            <button type="button" class="table-btn table-btn-shop action-shop" data-id="${escapeHTML(item.id)}" style="flex: 1.2;">+ List</button>
+            <button type="button" class="table-btn table-btn-secondary action-view" data-id="${escapeHTML(item.id)}">View</button>
           </div>
         `;
 
@@ -552,14 +566,14 @@
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td><strong>${item.name}</strong></td>
-              <td>${item.category}</td>
-              <td>${item.quantity}</td>
-              <td><span style="font-family: var(--font-mono);">${item.warrantyDate}</span></td>
+              <td><strong>${escapeHTML(item.name)}</strong></td>
+              <td>${escapeHTML(item.category)}</td>
+              <td>${escapeHTML(item.quantity)}</td>
+              <td><span style="font-family: var(--font-mono);">${escapeHTML(item.warrantyDate)}</span></td>
               <td>${statusBadge}</td>
               <td style="text-align: right;">
-                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}">View</button>
-              <button type="button" class="table-btn table-btn-secondary action-edit-warranty" data-id="${item.id}">Edit</button>
+                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${escapeHTML(item.id)}">View</button>
+              <button type="button" class="table-btn table-btn-secondary action-edit-warranty" data-id="${escapeHTML(item.id)}">Edit</button>
               </td>
             `;
             tbody.appendChild(tr);
@@ -655,7 +669,7 @@
 
             const leg = document.createElement('div');
             leg.className = 'dist-legend-item';
-            leg.innerHTML = `<span class="dist-dot" style="background-color: ${color};"></span> <span>${cat} (<strong>${count}</strong>)</span>`;
+            leg.innerHTML = `<span class="dist-dot" style="background-color: ${color};"></span> <span>${escapeHTML(cat)} (<strong>${count}</strong>)</span>`;
             legendEl.appendChild(leg);
           });
         }
@@ -674,7 +688,7 @@
 
       productsList.forEach(item => {
         const days = this.getDaysRemaining(item.expiryDate);
-        if (days !== Infinity && days <= 7 && !dismissed.includes(`expiry:${item.id}`)) {
+        if (days !== Infinity && days <= 7 && !dismissed.includes(`expiry:${escapeHTML(item.id)}`)) {
           alerts.push({
             type: 'expiry',
             item: item,
@@ -686,13 +700,13 @@
         }
 
         const qtyNum = StorageModule.getNumericQuantity(item.quantity);
-        if (qtyNum !== null && qtyNum <= 1 && !dismissed.includes(`stock:${item.id}`)) {
+        if (qtyNum !== null && qtyNum <= 1 && !dismissed.includes(`stock:${escapeHTML(item.id)}`)) {
           alerts.push({
             type: 'stock',
             item: item,
             urgent: qtyNum === 0,
             title: item.name,
-            message: qtyNum === 0 ? 'Product is completely out of stock (Qty: 0)' : `Product is running low (Current: ${item.quantity})`,
+            message: qtyNum === 0 ? 'Product is completely out of stock (Qty: 0)' : `Product is running low (Current: ${escapeHTML(item.quantity)})`,
             badge: qtyNum === 0 ? 'badge-danger' : 'badge-warning'
           });
         }
@@ -711,13 +725,13 @@
           card.innerHTML = `
             <div>
               <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${alert.type === 'expiry' ? 'Shelf Life Alert' : 'Stock Alert'}</span>
-              <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin: 2px 0;">${alert.title}</h4>
-              <p style="font-size: 12px; color: var(--text-secondary); margin: 0;">${alert.message}</p>
+              <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin: 2px 0;">${escapeHTML(alert.title)}</h4>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 0;">${escapeHTML(alert.message)}</p>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <button type="button" class="table-btn table-btn-shop action-shop" data-id="${alert.item.id}">+ List</button>
-              <button type="button" class="table-btn table-btn-secondary action-view" data-id="${alert.item.id}">View</button>
-              <button type="button" class="table-btn table-btn-secondary action-dismiss" data-alert-key="${alert.type}:${alert.item.id}">Dismiss</button>
+              <button type="button" class="table-btn table-btn-shop action-shop" data-id="${escapeHTML(alert.item.id)}">+ List</button>
+              <button type="button" class="table-btn table-btn-secondary action-view" data-id="${escapeHTML(alert.item.id)}">View</button>
+              <button type="button" class="table-btn table-btn-secondary action-dismiss" data-alert-key="${alert.type}:${escapeHTML(alert.item.id)}">Dismiss</button>
             </div>
           `;
           container.appendChild(card);
@@ -819,7 +833,7 @@
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = `category-nav-chip ${this.activeCategoryFilter === cat.id ? 'active' : ''}`;
-        chip.innerHTML = `<span>${cat.name}</span>`;
+        chip.innerHTML = `<span>${escapeHTML(cat.name)}</span>`;
         chip.onclick = () => {
           this.activeCategoryFilter = cat.id;
           this.render(searchQuery);
@@ -854,24 +868,26 @@
 
         let gridHtml = '';
         matchingProducts.forEach(prod => {
+          const safeImg = typeof safeImageURL === 'function' ? safeImageURL(prod.image) : '';
+          const monogram = escapeHTML((prod.name || '').slice(0, 2).toUpperCase());
           gridHtml += `
             <div class="retail-card" style="margin-bottom: 0;">
               <div class="retail-card-header">
-                <span class="retail-card-cat-pill">${cat.name}</span>
-                <span class="retail-card-date">~${prod.suggestedShelfLifeDays}d life</span>
+                <span class="retail-card-cat-pill">${escapeHTML(cat.name)}</span>
+                <span class="retail-card-date">~${Number(prod.suggestedShelfLifeDays) || 30}d life</span>
               </div>
               <div class="retail-card-image-box">
-                ${prod.image ? `<img src="${prod.image}" alt="${prod.name}" class="retail-card-img" onerror="this.parentElement.innerHTML='<span class=\\'retail-card-monogram\\'>${prod.name.slice(0,2).toUpperCase()}</span>'">` : `<span class="retail-card-monogram">${prod.name.slice(0,2).toUpperCase()}</span>`}
+                ${safeImg ? `<img src="${escapeHTML(safeImg)}" alt="${escapeHTML(prod.name)}" class="retail-card-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="retail-card-monogram" style="display:none;">${monogram}</span>` : `<span class="retail-card-monogram">${monogram}</span>`}
               </div>
               <div class="retail-card-content">
-                <h4 class="retail-card-title">${prod.name}</h4>
+                <h4 class="retail-card-title">${escapeHTML(prod.name)}</h4>
                 <div class="retail-card-meta">
-                  <span class="retail-card-qty">~${prod.defaultQuantity}</span>
+                  <span class="retail-card-qty">~${escapeHTML(prod.defaultQuantity)}</span>
                 </div>
               </div>
               <div class="retail-card-actions">
-                <button type="button" class="table-btn table-btn-secondary cat-add-btn" data-id="${prod.id}" style="flex: 1;">+ Add</button>
-                <button type="button" class="table-btn table-btn-shop cat-shop-btn" data-id="${prod.id}" style="flex: 1;">+ List</button>
+                <button type="button" class="table-btn table-btn-secondary cat-add-btn" data-id="${escapeHTML(prod.id)}" style="flex: 1;">+ Add</button>
+                <button type="button" class="table-btn table-btn-shop cat-shop-btn" data-id="${escapeHTML(prod.id)}" style="flex: 1;">+ List</button>
               </div>
             </div>
           `;
@@ -879,8 +895,8 @@
 
         section.innerHTML = `
           <div class="card-header">
-            <h3 class="card-title">${cat.name} (${matchingProducts.length})</h3>
-            <a href="#" class="cat-jump-inventory" data-cat="${cat.name}" style="font-size: 11.5px; font-weight: 600; color: var(--primary-forest);">View in Inventory &rarr;</a>
+            <h3 class="card-title">${escapeHTML(cat.name)} (${matchingProducts.length})</h3>
+            <a href="#" class="cat-jump-inventory" data-cat="${escapeHTML(cat.name)}" style="font-size: 11.5px; font-weight: 600; color: var(--primary-forest);">View in Inventory &rarr;</a>
           </div>
           <div class="retail-product-grid" style="margin-bottom: 0;">
             ${gridHtml}
@@ -1095,15 +1111,21 @@
           showConfirm(
             'Clear Inventory?',
             'This will permanently remove all products from your shelf. This cannot be undone.',
-            () => {
-              StorageModule.saveProducts([]);
+            async () => {
+              const syncRes = await StorageModule.saveProducts([]);
               products = StorageModule.loadProducts();
               InventoryModule.renderProductTable(products);
               DashboardModule.updateDashboardMetrics(products);
               if (typeof ShoppingListModule !== 'undefined') {
                 ShoppingListModule.syncShoppingList(products);
               }
-              showNotification('Inventory wiped clean.', 'success');
+              if (syncRes && syncRes.ok) {
+                showNotification('Inventory wiped clean and synced to cloud.', 'success');
+              } else if (syncRes && syncRes.status === 503) {
+                showNotification('Inventory wiped clean locally (cloud sync offline).', 'info');
+              } else {
+                showNotification('Inventory wiped clean locally on this device.', 'info');
+              }
             },
             'Clear Inventory'
           );
@@ -1187,7 +1209,7 @@
     },
 
     toggle() {
-      if (this.sidebar.classList.contains('drawer-open')) {
+      if (this.sidebar.classList.contains('open') || this.sidebar.classList.contains('drawer-open')) {
         this.close();
       } else {
         this.open();
@@ -1195,13 +1217,17 @@
     },
 
     open() {
+      this.sidebar.classList.add('open');
       this.sidebar.classList.add('drawer-open');
       this.overlay.classList.add('show');
       document.body.style.overflow = 'hidden';
     },
 
     close() {
-      if (this.sidebar) this.sidebar.classList.remove('drawer-open');
+      if (this.sidebar) {
+        this.sidebar.classList.remove('open');
+        this.sidebar.classList.remove('drawer-open');
+      }
       if (this.overlay) this.overlay.classList.remove('show');
       document.body.style.overflow = '';
     }

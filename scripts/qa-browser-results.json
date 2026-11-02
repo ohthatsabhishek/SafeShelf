@@ -1,26 +1,56 @@
 {
-  "timestamp": "2026-10-25T14:50:57.200Z",
+  "timestamp": "2026-10-27T07:27:43.608Z",
   "browser": "Google Chrome (Interactive Headed)",
-  "total": 15,
-  "passed": 15,
+  "total": 22,
+  "passed": 22,
   "failed": 0,
   "results": [
     {
-      "name": "Homepage & Auth View",
+      "name": "Clean Editorial Auth View",
       "status": "PASS",
-      "details": "Title: SafeShelf — Curated Household Pantry & Inventory",
+      "details": "Login form loaded cleanly with zero demo callouts or widgets",
       "screenshot": "01_login_screen.png"
+    },
+    {
+      "name": "Invalid Credentials Rejection",
+      "status": "PASS",
+      "details": "Error: \"Invalid email or password.\""
     },
     {
       "name": "Authentication & Sign-In",
       "status": "PASS",
-      "details": "Greeting: \"Good evening, Demo\""
+      "details": "Greeting: \"Good afternoon, SafeShelf\""
     },
     {
       "name": "Dashboard Metrics & Recent Items",
       "status": "PASS",
       "details": "5 recent table rows rendered",
       "screenshot": "02_dashboard_overview.png"
+    },
+    {
+      "name": "Expiry Tracker View Navigation",
+      "status": "PASS",
+      "details": "#expiringView rendered"
+    },
+    {
+      "name": "Categories View Navigation",
+      "status": "PASS",
+      "details": "#categoriesView rendered"
+    },
+    {
+      "name": "Warranties View Navigation",
+      "status": "PASS",
+      "details": "#warrantyView rendered"
+    },
+    {
+      "name": "Analytics View Navigation",
+      "status": "PASS",
+      "details": "#analyticsView rendered"
+    },
+    {
+      "name": "Notifications View Navigation",
+      "status": "PASS",
+      "details": "#notificationsView rendered"
     },
     {
       "name": "Inventory View Navigation",
@@ -31,7 +61,7 @@
     {
       "name": "Product Creation & Multer Upload",
       "status": "PASS",
-      "details": "Uploaded URL: /uploads/482ff819-b677-4eb5-8687-2fb6c6240452.png",
+      "details": "Uploaded URL: /uploads/5d39bb26-40bf-44db-bcc5-3c3f37cbb1f1.png",
       "screenshot": "04_drawer_multer_upload.png"
     },
     {
@@ -55,7 +85,7 @@
     {
       "name": "Shopping List Add & Render",
       "status": "PASS",
-      "details": "Added \"QA Almond Milk mvny2xhd\""
+      "details": "Added \"QA Almond Milk mvqd4oa1\""
     },
     {
       "name": "Shopping List Status Toggle",
@@ -82,18 +112,26 @@
       "screenshot": "11_reload_persistence.png"
     },
     {
+      "name": "Mobile Responsive Layout & Navigation",
+      "status": "PASS",
+      "details": "Mobile menu toggle verified at 375px",
+      "screenshot": "12_mobile_responsive.png"
+    },
+    {
       "name": "Item Deletion & Cleanup",
       "status": "PASS",
       "details": "Test item deleted cleanly",
-      "screenshot": "12_cleanup_deleted.png"
+      "screenshot": "13_cleanup_deleted.png"
     },
     {
       "name": "Logout & Session Clearance",
       "status": "PASS",
       "details": "Token cleared and authContainer displayed",
-      "screenshot": "13_logged_out.png"
+      "screenshot": "14_logged_out.png"
     }
   ],
-  "consoleErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
   "failedRequests": []
 }

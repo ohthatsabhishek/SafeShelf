@@ -267,7 +267,14 @@ const AuthModule = {
     if (profileDropdown) {
       const firstLi = profileDropdown.querySelector('li');
       if (firstLi) {
-        firstLi.innerHTML = `<div style="font-weight: 600;">${this.currentUser.name}</div><div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${this.currentUser.email}</div>`;
+        firstLi.replaceChildren();
+        const nameEl = document.createElement('div');
+        nameEl.style.fontWeight = '600';
+        nameEl.textContent = this.currentUser.name;
+        const emailEl = document.createElement('div');
+        emailEl.style.cssText = 'font-size: 11px; color: var(--text-muted); margin-top: 4px;';
+        emailEl.textContent = this.currentUser.email;
+        firstLi.append(nameEl, emailEl);
       }
     }
 
@@ -310,16 +317,6 @@ const AuthModule = {
       });
     }
 
-    const fillDemoBtn = document.getElementById('fillDemoCredentialsBtn');
-    if (fillDemoBtn) {
-      fillDemoBtn.addEventListener('click', () => {
-        const emailInput = document.getElementById('loginEmail');
-        const passInput = document.getElementById('loginPassword');
-        if (emailInput) emailInput.value = 'demo@safeshelf.com';
-        if (passInput) passInput.value = 'password';
-        showNotification('Demo account credentials filled.', 'info');
-      });
-    }
 
     if (loginForm) {
       loginForm.addEventListener('submit', async (e) => {
@@ -491,9 +488,45 @@ const AuthModule = {
     // in NavigationModule (see js/dashboard.js) since they trigger view navigation.
   },
 
-  logout() {
+  async logout(options = {}) {
+    // Safely sync any pending local changes before session ends if authenticated
+    const token = localStorage.getItem('safeshelf_auth_token');
+    if (token && typeof StorageModule !== 'undefined' && !options.skipSync) {
+      try {
+        const inventory = StorageModule.loadProducts();
+        const shoppingList = StorageModule.loadShoppingList();
+        const result = await StorageModule.syncToServer(inventory, shoppingList);
+        if (result && !result.ok && !options.force && (inventory.length > 0 || shoppingList.length > 0)) {
+          if (typeof showConfirm === 'function') {
+            showConfirm(
+              'Unsynced Changes',
+              `Cloud synchronization could not be confirmed (${result.reason || 'server unreachable'}). Logging out will clear local data from this browser. Sign out anyway?`,
+              () => this.logout({ skipSync: true, force: true }),
+              'Sign Out Anyway'
+            );
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Pending sync before logout could not be completed:', e.message);
+      }
+    }
+
+    // Clear session tokens and user identity
     localStorage.removeItem(this.CURRENT_USER_KEY);
     localStorage.removeItem('safeshelf_auth_token');
+
+    // Clear user-specific cached data to prevent data leakage on shared devices
+    localStorage.removeItem('safeshelf_inventory_data');
+    localStorage.removeItem('safeshelf_shopping_list');
+    localStorage.removeItem('safeshelf_shopping_suppressed');
+    localStorage.removeItem('safeshelf_dismissed_notifications');
+    localStorage.removeItem('safeshelf_data_version');
+
+    if (typeof SessionModule !== 'undefined' && SessionModule.clear) {
+      SessionModule.clear();
+    }
+
     location.reload();
   }
 };
@@ -501,6 +534,134 @@ const AuthModule = {
   const StorageModule = {
     STORAGE_KEY: 'safeshelf_inventory_data',
     SHOPPING_LIST_KEY: 'safeshelf_shopping_list',
+    VERSION_KEY: 'safeshelf_data_version',
+
+    syncState: 'idle', // 'idle' | 'pending' | 'saved' | 'offline' | 'failed' | 'conflict'
+    isSyncing: false,
+    pendingSync: null,
+
+    getVersion() {
+      const uid = AuthModule.currentUser && AuthModule.currentUser.id;
+      if (!uid) return 0;
+      try {
+        const raw = localStorage.getItem(this.VERSION_KEY);
+        if (!raw) return 0;
+        const parsed = JSON.parse(raw);
+        return typeof parsed === 'object' && parsed !== null ? (Number(parsed[uid]) || 0) : 0;
+      } catch (_) { return 0; }
+    },
+
+    setVersion(v) {
+      const uid = AuthModule.currentUser && AuthModule.currentUser.id;
+      if (!uid) return;
+      try {
+        let map = {};
+        const raw = localStorage.getItem(this.VERSION_KEY);
+        if (raw) map = JSON.parse(raw) || {};
+        map[uid] = Number(v) || 0;
+        localStorage.setItem(this.VERSION_KEY, JSON.stringify(map));
+      } catch (_) {}
+    },
+
+    updateSyncUI(status, detail) {
+      this.syncState = status;
+      let badge = document.getElementById('cloudSyncStatus');
+      if (!badge) {
+        const actions = document.querySelector('.header-actions');
+        if (actions) {
+          badge = document.createElement('div');
+          badge.id = 'cloudSyncStatus';
+          badge.className = 'cloud-sync-status';
+          actions.insertBefore(badge, actions.firstChild);
+        }
+      }
+      if (!badge) return;
+
+      if (!AuthModule.currentUser) {
+        badge.style.display = 'none';
+        return;
+      }
+
+      badge.style.display = 'inline-flex';
+      badge.className = 'cloud-sync-status cloud-sync-' + status;
+
+      switch (status) {
+        case 'pending':
+          badge.textContent = '☁️ Syncing…';
+          badge.title = 'Saving changes to cloud…';
+          break;
+        case 'saved':
+          badge.textContent = '☁️ Synced';
+          badge.title = detail ? `Synced at ${detail}` : 'All changes saved to cloud';
+          break;
+        case 'offline':
+          badge.textContent = '☁️ Offline';
+          badge.title = 'Saved locally; cloud sync is offline (MongoDB disconnected)';
+          break;
+        case 'conflict':
+          badge.textContent = '⚠️ Conflict';
+          badge.title = 'Sync conflict: another session has newer cloud data. Click to resolve.';
+          badge.onclick = () => {
+            showNotification('Sync conflict: another session updated cloud data. Please reload to sync.', 'warning');
+          };
+          break;
+        case 'failed':
+          badge.textContent = '⚠️ Sync error';
+          badge.title = detail || 'Cloud save failed; changes preserved locally';
+          break;
+        default:
+          badge.style.display = 'none';
+      }
+    },
+
+    handleConflict(conflictPayload, serverVersion) {
+      const serverData = conflictPayload && conflictPayload.serverData;
+      const message = 'Another session or tab has saved newer changes to the cloud.\n\n' +
+        'Choose "Load Cloud" to update this device with the newer cloud data.\n' +
+        'Choose "Cancel" to keep your local edits offline on this device without overwriting the cloud.';
+
+      if (typeof showConfirm === 'function') {
+        showConfirm(
+          'Cloud Sync Conflict',
+          message,
+          () => {
+            const uid = AuthModule.currentUser && AuthModule.currentUser.id;
+            if (!uid) return;
+
+            if (serverData) {
+              const allProducts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]').filter(p => p.userId !== uid);
+              localStorage.setItem(this.STORAGE_KEY, JSON.stringify([...allProducts, ...(serverData.inventory || []).map(p => ({ ...p, userId: uid }))]));
+
+              const stored = JSON.parse(localStorage.getItem(this.SHOPPING_LIST_KEY) || '{}');
+              const raw = {};
+              if (Array.isArray(stored)) stored.forEach(entry => { if (entry && entry.userId) raw[entry.userId] = entry.items || []; });
+              else Object.assign(raw, stored);
+              raw[uid] = serverData.shoppingList || [];
+              localStorage.setItem(this.SHOPPING_LIST_KEY, JSON.stringify(raw));
+            }
+
+            this.setVersion(serverVersion);
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            this.updateSyncUI('saved', timeStr);
+
+            products = this.loadProducts();
+            if (typeof DashboardModule !== 'undefined') {
+              DashboardModule.updateDashboardMetrics(products);
+            }
+            if (typeof InventoryModule !== 'undefined') {
+              InventoryModule.renderProductTable(products);
+            }
+            if (typeof ShoppingListModule !== 'undefined' && ShoppingListModule.renderShoppingList) {
+              ShoppingListModule.renderShoppingList();
+            }
+            showNotification('Updated with latest cloud changes.', 'info');
+          },
+          'Load Cloud'
+        );
+      } else {
+        showNotification('Sync conflict: newer data exists in the cloud. Local edits kept offline.', 'warning');
+      }
+    },
 
     // Safe numeric quantity extractor (e.g. "2 kg" -> 2, "1 jar" -> 1, "0" -> 0)
     getNumericQuantity(quantityStr) {
@@ -528,25 +689,127 @@ const AuthModule = {
         const response = await fetch('/api/user-data', { headers: { Authorization: `Bearer ${token}` } });
         if (response.status === 401) {
           // Token expired or invalid
-          AuthModule.logout();
+          AuthModule.logout({ skipSync: true });
           return false;
         }
-        if (!response.ok) return false;
-        const data = await response.json(); const uid = AuthModule.currentUser && AuthModule.currentUser.id;
+        if (response.status === 503) {
+          this.updateSyncUI('offline', 'MongoDB disconnected');
+          return false;
+        }
+        if (!response.ok) {
+          this.updateSyncUI('failed', `Server error (${response.status})`);
+          return false;
+        }
+        const data = await response.json();
+        const uid = AuthModule.currentUser && AuthModule.currentUser.id;
         if (!uid) return false;
+
+        this.setVersion(Number(data.version) || 0);
+
         const allProducts = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]').filter(p => p.userId !== uid);
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify([...allProducts, ...(data.inventory || []).map(p => ({...p,userId:uid}))]));
-        const stored = JSON.parse(localStorage.getItem(this.SHOPPING_LIST_KEY) || '{}'); const raw = {};
+        const stored = JSON.parse(localStorage.getItem(this.SHOPPING_LIST_KEY) || '{}');
+        const raw = {};
         if (Array.isArray(stored)) stored.forEach(entry => { if (entry && entry.userId) raw[entry.userId] = entry.items || []; });
         else Object.assign(raw, stored);
-        raw[uid] = data.shoppingList || []; localStorage.setItem(this.SHOPPING_LIST_KEY, JSON.stringify(raw));
+        raw[uid] = data.shoppingList || [];
+        localStorage.setItem(this.SHOPPING_LIST_KEY, JSON.stringify(raw));
+
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        this.updateSyncUI('saved', timeStr);
         return true;
-      } catch (e) { console.warn('Could not sync SafeShelf data from server:', e.message); return false; }
+      } catch (e) {
+        console.warn('Could not sync SafeShelf data from server:', e.message);
+        this.updateSyncUI('offline', 'Network error');
+        return false;
+      }
     },
+
     async syncToServer(inventory, shoppingList) {
-      const token = localStorage.getItem('safeshelf_auth_token'); if (!token) return false;
-      try { const response = await fetch('/api/user-data', { method:'PUT', headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`}, body:JSON.stringify({inventory,shoppingList}) }); return response.ok; }
-      catch (e) { console.warn('Could not save SafeShelf data to server:', e.message); return false; }
+      const token = localStorage.getItem('safeshelf_auth_token');
+      if (!token || !AuthModule.currentUser) {
+        return { ok: false, status: 'unauthenticated', reason: 'Not signed in' };
+      }
+
+      // If another sync is currently in-flight, queue the latest payload to avoid duplicate in-flight requests
+      if (this.isSyncing) {
+        // A queued payload has not reached the server yet. Never report it as
+        // saved: callers such as logout must treat it as pending until a later
+        // request receives an explicit successful response.
+        this.pendingSync = { inventory, shoppingList };
+        return { ok: false, status: 'queued', reason: 'A cloud save is already in progress; this update is queued but not yet confirmed' };
+      }
+
+      this.isSyncing = true;
+      this.updateSyncUI('pending');
+
+      try {
+        const version = this.getVersion();
+        const response = await fetch('/api/user-data', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ inventory, shoppingList, version })
+        });
+
+        if (response.status === 401) {
+          this.isSyncing = false;
+          this.pendingSync = null;
+          this.updateSyncUI('failed', 'Session expired');
+          AuthModule.logout({ skipSync: true });
+          return { ok: false, status: 'expired', reason: 'Session expired' };
+        }
+
+        if (response.status === 409) {
+          this.isSyncing = false;
+          this.pendingSync = null;
+          const conflictPayload = await response.json().catch(() => ({}));
+          const serverVersion = conflictPayload.currentVersion !== undefined ? conflictPayload.currentVersion : (version + 1);
+          this.updateSyncUI('conflict', 'Conflict: newer cloud data');
+          this.handleConflict(conflictPayload, serverVersion);
+          return { ok: false, status: 'conflict', reason: 'Version conflict', serverData: conflictPayload.serverData };
+        }
+
+        if (response.status === 503) {
+          this.isSyncing = false;
+          this.pendingSync = null;
+          this.updateSyncUI('offline', 'MongoDB offline');
+          return { ok: false, status: 'offline', reason: 'Cloud service offline (MongoDB disconnected)' };
+        }
+
+        if (!response.ok) {
+          this.isSyncing = false;
+          this.pendingSync = null;
+          const errPayload = await response.json().catch(() => ({}));
+          const reason = errPayload.error || `Server returned ${response.status}`;
+          this.updateSyncUI('failed', reason);
+          return { ok: false, status: 'failed', reason };
+        }
+
+        const result = await response.json();
+        if (result.version !== undefined) {
+          this.setVersion(result.version);
+        }
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        this.updateSyncUI('saved', timeStr);
+        this.isSyncing = false;
+
+        // Process any queued payload that arrived while sync was transmitting
+        if (this.pendingSync) {
+          const next = this.pendingSync;
+          this.pendingSync = null;
+          return this.syncToServer(next.inventory, next.shoppingList);
+        }
+
+        return { ok: true, status: 'saved', version: result.version };
+      } catch (err) {
+        this.isSyncing = false;
+        this.pendingSync = null;
+        this.updateSyncUI('offline', 'Network error');
+        return { ok: false, status: 'offline', reason: err.message || 'Network error' };
+      }
     },
 
     // Load user-scoped shopping list from localStorage
@@ -577,10 +840,10 @@ const AuthModule = {
     },
 
     // Save user-scoped shopping list to localStorage
-    saveShoppingList(userId, items) {
+    async saveShoppingList(userId, items) {
       try {
         const uid = userId || (AuthModule.currentUser ? AuthModule.currentUser.id : null);
-        if (!uid) return;
+        if (!uid) return { ok: true, status: 'local', reason: 'Unauthenticated' };
         const raw = localStorage.getItem(this.SHOPPING_LIST_KEY);
         let allLists = [];
 
@@ -606,9 +869,11 @@ const AuthModule = {
         allLists = allLists.filter(u => u && u.userId !== uid);
         allLists.push({ userId: uid, items: items || [] });
         localStorage.setItem(this.SHOPPING_LIST_KEY, JSON.stringify(allLists));
-        const inventory = this.loadProducts(); this.syncToServer(inventory, items || []);
+        const inventory = this.loadProducts();
+        return await this.syncToServer(inventory, items || []);
       } catch (e) {
         console.error('Error saving shopping list to localStorage', e);
+        return { ok: false, status: 'error', reason: e.message };
       }
     },
 
@@ -628,8 +893,8 @@ const AuthModule = {
     },
 
     // Save data to localStorage
-    saveProducts(productsList) {
-      if (!AuthModule.currentUser) return;
+    async saveProducts(productsList) {
+      if (!AuthModule.currentUser) return { ok: true, status: 'local', reason: 'Unauthenticated' };
       try {
         const data = localStorage.getItem(this.STORAGE_KEY);
         let allProducts = data ? JSON.parse(data) : this.getSeedData();
@@ -641,9 +906,10 @@ const AuthModule = {
         allProducts = [...allProducts, ...productsList];
         
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allProducts));
-        this.syncToServer(productsList, this.loadShoppingList());
+        return await this.syncToServer(productsList, this.loadShoppingList());
       } catch (e) {
         console.error('Error saving data to localStorage', e);
+        return { ok: false, status: 'error', reason: e.message };
       }
     },
 

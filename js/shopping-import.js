@@ -22,7 +22,7 @@
       if (!items.length) throw new Error('No valid items were found in this CSV.');
       const invalidNote = payload.invalid && payload.invalid.length ? ` (${payload.invalid.length} invalid row(s) will be skipped)` : '';
       
-      const proceedImport = () => {
+      const proceedImport = async () => {
         const current = StorageModule.loadShoppingList();
         const norm = s => String(s || '').normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         const existing = new Set(current.map(x => norm(x.name || x.productName || x.itemName || x.product)));
@@ -42,13 +42,14 @@
           });
           added++;
         });
-        StorageModule.saveShoppingList(AuthModule.currentUser && AuthModule.currentUser.id, current);
+        const syncRes = await StorageModule.saveShoppingList(AuthModule.currentUser && AuthModule.currentUser.id, current);
         if (typeof ShoppingListModule !== 'undefined' && ShoppingListModule.renderShoppingList) ShoppingListModule.renderShoppingList();
         else if (typeof ShoppingListModule !== 'undefined' && ShoppingListModule.render) ShoppingListModule.render();
+        const cloudSuffix = syncRes && syncRes.ok ? ' Synced to cloud.' : (syncRes && (syncRes.status === 'offline' || syncRes.status === 503) ? ' Saved locally (cloud sync offline).' : '');
         if (typeof showNotification === 'function') {
-          showNotification(`Import complete. Added ${added} item(s); ${items.length - added} duplicate(s) skipped.`, 'success');
+          showNotification(`Import complete. Added ${added} item(s); ${items.length - added} duplicate(s) skipped.${cloudSuffix}`, 'success');
         } else {
-          alert(`Import complete. Added ${added} item(s); ${items.length - added} duplicate(s) skipped.`);
+          alert(`Import complete. Added ${added} item(s); ${items.length - added} duplicate(s) skipped.${cloudSuffix}`);
         }
       };
 

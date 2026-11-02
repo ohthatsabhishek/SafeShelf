@@ -397,40 +397,6 @@ button, input, select, textarea {
   display: block;
 }
 
-/* Quick Demo Account Auto-Fill Banner */
-.auth-demo-callout {
-  margin-top: 18px;
-  padding: 12px 14px;
-  background-color: var(--surface-subdued);
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.demo-callout-text {
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.demo-callout-text .demo-tag {
-  display: block;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--color-deep-forest);
-  margin-bottom: 2px;
-}
-
-.demo-callout-text code {
-  font-family: var(--font-mono);
-  background: rgba(0, 0, 0, 0.05);
-  padding: 1px 4px;
-  border-radius: 2px;
-}
 
 .auth-footer-switch {
   margin-top: 20px;
@@ -685,6 +651,61 @@ header {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+/* Cloud Sync Status Indicator */
+.cloud-sync-status {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+  background-color: var(--surface-subdued);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cloud-sync-status.cloud-sync-pending {
+  background-color: var(--surface-subdued);
+  color: var(--text-secondary);
+  border-color: var(--border-hairline);
+}
+
+.cloud-sync-status.cloud-sync-saved {
+  background-color: var(--status-safe-bg);
+  color: var(--status-safe-text);
+  border-color: var(--status-safe-border);
+}
+
+.cloud-sync-status.cloud-sync-offline {
+  background-color: var(--surface-canvas);
+  color: var(--text-muted);
+  border-color: var(--border-hairline);
+}
+
+.cloud-sync-status.cloud-sync-conflict {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border-color: var(--status-danger-border);
+  cursor: pointer;
+  animation: pulse-conflict 2s infinite ease-in-out;
+}
+
+.cloud-sync-status.cloud-sync-failed {
+  background-color: var(--status-warn-bg);
+  color: var(--status-warn-text);
+  border-color: var(--status-warn-border);
+}
+
+@keyframes pulse-conflict {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* Notification Button & Menu */
@@ -2549,10 +2570,12 @@ td {
     top: 0;
     bottom: 0;
     left: -260px;
+    z-index: 30;
     transition: transform 0.25s ease;
     box-shadow: var(--shadow-drawer);
   }
-  #appSidebar.open {
+  #appSidebar.open,
+  #appSidebar.drawer-open {
     transform: translateX(260px);
   }
   .mobile-menu-btn {

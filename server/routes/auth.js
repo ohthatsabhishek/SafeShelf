@@ -3,13 +3,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
+const requireJwt = (req, res, next) => req.app.locals.jwtReady ? next() : res.status(503).json({ error: 'Authentication is not configured. Set a strong JWT_SECRET and restart the server.' });
 const requireDatabase = (req,res,next) => req.app.locals.mongoReady ? next() : res.status(503).json({error:'Account service is unavailable because MongoDB is disconnected. Please try again shortly.'});
-router.use(requireDatabase);
-const tokenFor = user => jwt.sign({ sub: user._id.toString(), email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+router.use(requireJwt, requireDatabase);
+const tokenFor = user => jwt.sign({ sub: user._id.toString(), email: user.email, role: user.role }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 router.post('/register', async (req, res, next) => {
  try {
   const name = String(req.body.name || '').trim(), email = String(req.body.email || '').trim().toLowerCase(), password = String(req.body.password || '');
-  if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) return res.status(400).json({ error: 'Enter a name, valid email and password of at least 8 characters.' });
+  if (name.length < 2 || name.length > 80 || !/^\S+@\S+\.\S+$/.test(email) || email.length > 254 || password.length < 8 || password.length > 128) return res.status(400).json({ error: 'Enter a name, valid email and password of at least 8 characters.' });
   if (await User.exists({ email })) return res.status(409).json({ error: 'An account with this email already exists.' });
   const user = await User.create({ name, email, passwordHash: await bcrypt.hash(password, 12) });
   res.status(201).json({ token: tokenFor(user), user: { id: user._id, name: user.name, email: user.email, role: user.role } });
@@ -28,7 +29,7 @@ router.put('/profile', auth, async (req, res, next) => {
   try {
     const name = String(req.body.name || '').trim();
     const email = String(req.body.email || '').trim().toLowerCase();
-    if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email)) {
+    if (name.length < 2 || name.length > 80 || !/^\S+@\S+\.\S+$/.test(email) || email.length > 254) {
       return res.status(400).json({ error: 'Enter a valid name (at least 2 characters) and a valid email.' });
     }
     const duplicate = await User.findOne({ email, _id: { $ne: req.user.sub } });

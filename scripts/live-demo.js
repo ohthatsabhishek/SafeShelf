@@ -6,12 +6,10 @@ async function runLiveDemo() {
   console.log('🎬 STARTING LIVE BROWSER DEMO: SAFESHELF');
   console.log('====================================================\n');
 
-  const userDataDir = 'C:\\Users\\asus\\AppData\\Local\\Temp\\SafeShelfPlaywrightDemo';
-  const context = await chromium.launchPersistentContext(userDataDir, {
+  const browser = await chromium.launch({
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     headless: false,
-    slowMo: 140,
-    viewport: null,
+    slowMo: 120,
     args: [
       '--start-maximized',
       '--window-position=40,30',
@@ -21,7 +19,11 @@ async function runLiveDemo() {
     ]
   });
 
-  const page = context.pages().length > 0 ? context.pages()[0] : await context.newPage();
+  const context = await browser.newContext({
+    viewport: null // Takes full maximized display
+  });
+
+  const page = await context.newPage();
 
   async function setDemoBanner(text, subtext = '') {
     console.log(`\n📢 [DEMO STEP] ${text} ${subtext ? '(' + subtext + ')' : ''}`);
@@ -196,8 +198,6 @@ async function runLiveDemo() {
     console.error('\n💥 Demo interrupted or encountered error:', err);
   } finally {
     console.log('\n🌟 Demo completed. Keeping the browser window open for you to view and interact with!');
-    // Keep browser open indefinitely so user can explore
-    await new Promise(resolve => setTimeout(resolve, 3600000));
   }
 }
 

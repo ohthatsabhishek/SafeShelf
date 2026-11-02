@@ -551,7 +551,7 @@
         name: product.name,
         category: product.categoryName || 'Other',
         quantity: product.defaultQuantity,
-        description: product.brand && product.brand !== 'Generic' ? `Brand: ${product.brand}. ${product.description || ''}` : product.description || '',
+        description: product.brand && product.brand !== 'Generic' ? `Brand: ${escapeHTML(product.brand)}. ${product.description || ''}` : product.description || '',
         suggestedDays: product.suggestedShelfLifeDays || 30
       };
     }
@@ -645,14 +645,14 @@
     if (imgUrl) {
       return `
         <div class="product-thumbnail-box ${isPackaging ? 'box-contain' : ''}" aria-hidden="true">
-          <img src="${imgUrl}" alt="${item.name}" class="${imgClass}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <span class="product-thumbnail-fallback" style="display: none;">${monogram}</span>
+          <img src="${escapeHTML(safeImageURL(imgUrl))}" alt="${escapeHTML(item.name)}" class="${imgClass}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <span class="product-thumbnail-fallback" style="display: none;">${escapeHTML(monogram)}</span>
         </div>
       `;
     }
     return `
       <div class="product-thumbnail-box product-thumbnail-monogram" aria-hidden="true">
-        <span class="product-thumbnail-fallback">${monogram}</span>
+        <span class="product-thumbnail-fallback">${escapeHTML(monogram)}</span>
       </div>
     `;
   }
@@ -745,13 +745,13 @@
                 <div class="product-cell">
                   ${getThumbnailMarkup(item)}
                   <div class="product-info-col">
-                    <span class="product-name" title="${item.name}">${item.name}</span>
-                    <span class="product-meta">${item.description || item.category}</span>
+                    <span class="product-name" title="${escapeHTML(item.name)}">${escapeHTML(item.name)}</span>
+                    <span class="product-meta">${escapeHTML(item.description || item.category)}</span>
                   </div>
                 </div>
               </td>
-              <td class="col-category"><span class="table-category-tag">${item.category}</span></td>
-              <td class="col-quantity"><strong class="table-quantity-val">${item.quantity}</strong></td>
+              <td class="col-category"><span class="table-category-tag">${escapeHTML(item.category)}</span></td>
+              <td class="col-quantity"><strong class="table-quantity-val">${escapeHTML(item.quantity)}</strong></td>
               <td class="col-expiry">
                 <div class="table-expiry-wrap">
                   <span class="table-date-val">${item.expiryDate || '—'}</span>
@@ -761,10 +761,10 @@
               <td class="col-status"><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
               <td class="col-actions" style="text-align: right;">
                 <div class="table-actions">
-                  <button type="button" class="table-btn table-btn-shop action-shop" data-id="${item.id}" title="Add to shopping list">+ List</button>
-                  <button type="button" class="table-btn table-btn-secondary action-edit" data-id="${item.id}" title="Edit product">Edit</button>
-                  <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}" title="View details">View</button>
-                  <button type="button" class="table-btn table-btn-danger action-delete" data-id="${item.id}" title="Delete product">Delete</button>
+                  <button type="button" class="table-btn table-btn-shop action-shop" data-id="${escapeHTML(item.id)}" title="Add to shopping list">+ List</button>
+                  <button type="button" class="table-btn table-btn-secondary action-edit" data-id="${escapeHTML(item.id)}" title="Edit product">Edit</button>
+                  <button type="button" class="table-btn table-btn-secondary action-view" data-id="${escapeHTML(item.id)}" title="View details">View</button>
+                  <button type="button" class="table-btn table-btn-danger action-delete" data-id="${escapeHTML(item.id)}" title="Delete product">Delete</button>
                 </div>
               </td>
             `;
@@ -796,28 +796,28 @@
             card.className = 'retail-card';
             card.innerHTML = `
               <div class="retail-card-header">
-                <span class="retail-card-cat-pill">${item.category}</span>
+                <span class="retail-card-cat-pill">${escapeHTML(item.category)}</span>
                 <span class="badge ${statusInfo.class}">${daysText}</span>
               </div>
               <div class="retail-card-image-box">
                 ${imgUrl ? 
-                  `<img src="${imgUrl}" alt="${item.name}" class="retail-card-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                   <div class="retail-card-fallback" style="display:none;"><span class="retail-card-monogram">${monogram}</span><span class="retail-card-fallback-sub">${item.category}</span></div>` : 
-                  `<div class="retail-card-fallback"><span class="retail-card-monogram">${monogram}</span><span class="retail-card-fallback-sub">${item.category}</span></div>`
+                  `<img src="${escapeHTML(safeImageURL(imgUrl))}" alt="${escapeHTML(item.name)}" class="retail-card-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div class="retail-card-fallback" style="display:none;"><span class="retail-card-monogram">${escapeHTML(monogram)}</span><span class="retail-card-fallback-sub">${escapeHTML(item.category)}</span></div>` : 
+                  `<div class="retail-card-fallback"><span class="retail-card-monogram">${escapeHTML(monogram)}</span><span class="retail-card-fallback-sub">${escapeHTML(item.category)}</span></div>`
                 }
               </div>
               <div class="retail-card-content">
-                <h4 class="retail-card-title" title="${item.name}">${item.name}</h4>
+                <h4 class="retail-card-title" title="${escapeHTML(item.name)}">${escapeHTML(item.name)}</h4>
                 <div class="retail-card-meta">
-                  <span class="retail-card-qty">${item.quantity}</span>
+                  <span class="retail-card-qty">${escapeHTML(item.quantity)}</span>
                   <span class="retail-card-date">${item.expiryDate || 'No date'}</span>
                 </div>
               </div>
               <div class="retail-card-actions">
-                <button type="button" class="table-btn table-btn-shop action-shop" data-id="${item.id}" title="Add to Shopping List" style="flex: 1.4;">+ List</button>
-                <button type="button" class="table-btn table-btn-secondary action-edit" data-id="${item.id}" style="flex: 1;">Edit</button>
-                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}" style="flex: 1;">View</button>
-                <button type="button" class="table-btn table-btn-danger action-delete" data-id="${item.id}" title="Delete product" style="width: 28px; padding: 0;">✕</button>
+                <button type="button" class="table-btn table-btn-shop action-shop" data-id="${escapeHTML(item.id)}" title="Add to Shopping List" style="flex: 1.4;">+ List</button>
+                <button type="button" class="table-btn table-btn-secondary action-edit" data-id="${escapeHTML(item.id)}" style="flex: 1;">Edit</button>
+                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${escapeHTML(item.id)}" style="flex: 1;">View</button>
+                <button type="button" class="table-btn table-btn-danger action-delete" data-id="${escapeHTML(item.id)}" title="Delete product" style="width: 28px; padding: 0;">✕</button>
               </div>
             `;
             gridContainer.appendChild(card);
@@ -839,15 +839,15 @@
               <td>
                 <div class="product-cell">
                   ${getThumbnailMarkup(item)}
-                  <span class="product-name">${item.name}</span>
+                  <span class="product-name">${escapeHTML(item.name)}</span>
                 </div>
               </td>
-              <td>${item.category}</td>
-              <td><strong>${item.quantity}</strong></td>
-              <td><span style="font-family: var(--font-mono);">${item.expiryDate}</span></td>
+              <td>${escapeHTML(item.category)}</td>
+              <td><strong>${escapeHTML(item.quantity)}</strong></td>
+              <td><span style="font-family: var(--font-mono);">${escapeHTML(item.expiryDate)}</span></td>
               <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
               <td style="text-align: right;">
-                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${item.id}">View</button>
+                <button type="button" class="table-btn table-btn-secondary action-view" data-id="${escapeHTML(item.id)}">View</button>
               </td>
             `;
             recentBody.appendChild(tr);
@@ -975,18 +975,18 @@
       let warrantyInfo = 'No warranty specified';
       if (item.warrantyDate) {
         const wDays = DashboardModule.getDaysRemaining(item.warrantyDate);
-        warrantyInfo = `${item.warrantyDate} (${wDays >= 0 ? `${wDays} days remaining` : 'Expired'})`;
+        warrantyInfo = `${escapeHTML(item.warrantyDate)} (${wDays >= 0 ? `${wDays} days remaining` : 'Expired'})`;
       }
 
       const modalBody = document.getElementById('detailsModalBody');
       modalBody.innerHTML = `
         <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-hairline);">
           <div style="width: 64px; height: 64px; min-width: 64px; border-radius: var(--radius); background: var(--surface-subdued); border: 1px solid var(--border-hairline); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-            ${imgUrl ? `<img src="${imgUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:20px;font-weight:700;">${monogram}</span>`}
+            ${imgUrl ? `<img src="${escapeHTML(safeImageURL(imgUrl))}" alt="${escapeHTML(item.name)}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:20px;font-weight:700;">${escapeHTML(monogram)}</span>`}
           </div>
           <div>
-            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category}</span>
-            <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 2px 0 6px;">${item.name}</h2>
+            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${escapeHTML(item.category)}</span>
+            <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 2px 0 6px;">${escapeHTML(item.name)}</h2>
             <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
           </div>
         </div>
@@ -994,11 +994,11 @@
         <table style="width: 100%; font-size: 12.5px;">
           <tr>
             <td style="font-weight: 600; color: var(--text-secondary); width: 35%; padding: 8px 0;">Quantity:</td>
-            <td style="padding: 8px 0;"><strong>${item.quantity}</strong></td>
+            <td style="padding: 8px 0;"><strong>${escapeHTML(item.quantity)}</strong></td>
           </tr>
           <tr>
             <td style="font-weight: 600; color: var(--text-secondary); padding: 8px 0;">Expiry Date:</td>
-            <td style="padding: 8px 0;"><span style="font-family: var(--font-mono);">${item.expiryDate} (${daysLeft < 0 ? 'Expired' : `${daysLeft} days left`})</span></td>
+            <td style="padding: 8px 0;"><span style="font-family: var(--font-mono);">${escapeHTML(item.expiryDate)} (${daysLeft < 0 ? 'Expired' : `${daysLeft} days left`})</span></td>
           </tr>
           <tr>
             <td style="font-weight: 600; color: var(--text-secondary); padding: 8px 0;">Warranty End:</td>
@@ -1006,7 +1006,7 @@
           </tr>
           <tr>
             <td style="font-weight: 600; color: var(--text-secondary); padding: 8px 0; vertical-align: top;">Notes:</td>
-            <td style="padding: 8px 0; color: var(--text-secondary);">${item.description || 'No description provided.'}</td>
+            <td style="padding: 8px 0; color: var(--text-secondary);">${escapeHTML(item.description || 'No description provided.')}</td>
           </tr>
         </table>
       `;
@@ -1109,15 +1109,23 @@
       const item = products.find(p => p.id === id);
       if (!item || item.userId !== AuthModule.currentUser.id) return;
 
-      showConfirm('Delete Product?', `Are you sure you want to delete "${item.name}" from your shelf?`, () => {
+      showConfirm('Delete Product?', `Are you sure you want to delete "${escapeHTML(item.name)}" from your shelf?`, async () => {
         products = products.filter(p => p.id !== id);
-        StorageModule.saveProducts(products);
         DashboardModule.updateDashboardMetrics(products);
         if (typeof ShoppingListModule !== 'undefined') {
           ShoppingListModule.syncShoppingList(products);
         }
         this.renderProductTable(products);
-        showNotification('Product deleted from inventory.', 'success');
+        const syncResult = await StorageModule.saveProducts(products);
+        if (syncResult && syncResult.status === 'offline') {
+          showNotification('Product deleted locally (cloud sync offline).', 'warning');
+        } else if (syncResult && syncResult.status === 'conflict') {
+          // Conflict modal handled in StorageModule.handleConflict
+        } else if (syncResult && syncResult.ok && syncResult.status === 'saved') {
+          showNotification('Product deleted and synced to cloud.', 'success');
+        } else {
+          showNotification('Product deleted from inventory.', 'info');
+        }
       }, 'Delete');
     }
   };
@@ -1274,15 +1282,24 @@
     }
 
     // Save and render
-    StorageModule.saveProducts(products);
     DashboardModule.updateDashboardMetrics(products);
     if (typeof ShoppingListModule !== 'undefined') {
       ShoppingListModule.syncShoppingList(products);
     }
     InventoryModule.renderProductTable(products);
-    
-    showNotification('Product saved to your shelf.', 'success');
     InventoryModule.cancelEdit();
+
+    StorageModule.saveProducts(products).then(syncResult => {
+      if (syncResult && syncResult.status === 'offline') {
+        showNotification('Product saved locally on this device (cloud sync offline).', 'warning');
+      } else if (syncResult && syncResult.status === 'conflict') {
+        // Handled by StorageModule.handleConflict
+      } else if (syncResult && syncResult.ok && syncResult.status === 'saved') {
+        showNotification('Product saved and synced to cloud.', 'success');
+      } else {
+        showNotification('Product saved to your shelf.', 'success');
+      }
+    });
   });
 
   // Attach cancel edit listener
